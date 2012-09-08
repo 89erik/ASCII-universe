@@ -131,7 +131,9 @@ void add_default_objects() {
 int add_custom_objects() {
 	n_objects = 0;
 	object *tmp;
-	int i = 0;
+	int rc, i = 0;
+	double *from_user = malloc(sizeof(double));
+
 	printf("Adding custom objects...\n");
 	while (1) {
 		size_t new_size = sizeof(object)*(++n_objects);
@@ -143,18 +145,42 @@ int add_custom_objects() {
 			printf("Exiting...\n");
 			return -1;
 		}
-		printf("Enter x posision: ");
-		objects[i].x = double_from_user();
-		printf("Enter y posision: ");
-		objects[i].y = double_from_user();
-		printf("Enter mass: ");
-		objects[i].m = double_from_user();
-		printf("Enter radius: ");
-		objects[i].r = double_from_user();
-		printf("Enter x velocity: ");
-		objects[i].vx = double_from_user();
-		printf("Enter y velocity: ");
-		objects[i].vy = double_from_user();
+		do {
+			printf("Enter x posision: ");
+			rc = double_from_user(from_user);
+			objects[i].x = *from_user;
+		} while (rc);
+
+		do {
+			printf("Enter y posision: ");
+			rc = double_from_user(from_user);
+			objects[i].y = *from_user;
+		} while (rc);
+
+		do {
+			printf("Enter mass: ");
+			rc = double_from_user(from_user);
+			objects[i].m = *from_user;
+		} while (rc);
+
+		do {
+			printf("Enter radius: ");
+			rc = double_from_user(from_user);
+			objects[i].r = *from_user;
+		} while (rc);
+
+		do {
+			printf("Enter x velocity: ");
+			rc = double_from_user(from_user);
+			objects[i].vx = *from_user;
+		} while (rc);
+
+		do {
+			printf("Enter y velocity: ");
+			rc = double_from_user(from_user);
+			objects[i].vy = *from_user;
+		} while (rc);
+
 		objects[i].ax = 0;
 		objects[i].ay = 0;
 		printf("Type Y to add more, enter to start simulation... ");
@@ -279,7 +305,7 @@ void print_object_values(object *o) {
 	printf("y acceleration: %f\n", o->ay);
 }
 
-double double_from_user() {
+int double_from_user(double *from_user) {
 	int i=0;
 	char c;
 	char word[sizeof(char) * 64];
@@ -289,9 +315,14 @@ double double_from_user() {
 	i=0;
 	while ((c=getchar()) != '\n') {
 		word[i++] = c;
+		if ( ((c-'0') > 9) && c != '.') {
+			printf("Input must be a number using '.' as decimal\n");
+			while ((c=getchar()) != '\n'); /* Skips to end of line */
+			return -1;
+		}
 	}
-	double n = atof(word);
-	return n;
+	*from_user = atof(word);
+	return 0;
 }
 
 
