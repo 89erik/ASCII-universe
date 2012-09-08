@@ -17,6 +17,7 @@
 int array_height = 22;
 int array_width = 40;
 char centering = 0;
+int center_object = 0;
 int n_objects;
 object *objects;
 
@@ -27,28 +28,28 @@ void print() {
 	int y[n_objects];	/* rounded y-pos */
 	int r[n_objects];	/* rounded radius */
 	
-	/* Sets first object */
+	/* Sets centered object */
 	if (n_objects > 0) {
-		x[0] = nearbyint(objects[0].x);
-		y[0] = nearbyint(objects[0].y);
-		r[0] = nearbyint(objects[0].r);
+		x[center_object] = nearbyint(objects[center_object].x);
+		y[center_object] = nearbyint(objects[center_object].y);
+		r[center_object] = nearbyint(objects[center_object].r);
 	}
 	
 	/* Determines offset */
 	int offset_x = 0;
 	int offset_y = 0;
 	if (centering) {
-		offset_x = (array_width/2) - x[0];
-		offset_y = (array_height/2) - y[0];
+		offset_x = (array_width/2) - x[center_object];
+		offset_y = (array_height/2) - y[center_object];
 	}
 
 	/* Applies offset for first object */
-	x[0] += offset_x;
-	y[0] += offset_y;
+	/*x[0] += offset_x;
+	y[0] += offset_y;*/
 
-	/* Sets all objects and applies offset */
+	/* Sets objects and applies offset */
 	int i;
-	for (i=1; i<n_objects; i++) {
+	for (i=0; i<n_objects; i++) {
 		x[i] = nearbyint(objects[i].x) + offset_x;
 		y[i] = nearbyint(objects[i].y) + offset_y;
 		r[i] = nearbyint(objects[i].r);
@@ -185,18 +186,36 @@ int add_custom_objects() {
 		objects[i].ay = 0;
 		printf("Type Y to add more, enter to start simulation... ");
 		char c = getchar();
-		if (c != 'Y' && c != 'y') {
+		
+		if (c != '\n') {		
+			while (getchar() != '\n'); /* Skips to line feed */
+		}
+
+		if (c != 'Y' && c != 'y') {		/* No more objects */
 			printf("\n");
+
+			if (centering && n_objects <= center_object) {	/* Invalid center object */
+				printf("You added %d objects, but centered object was set to %d\n", 
+						n_objects, center_object);
+				printf("Objects are zero-indexed, meaning the first object is object #0\n");
+				int *from_user = malloc(sizeof(int));
+				int rc;
+				do {
+					printf("Enter new center object (less than %d)...", n_objects);			
+					rc = int_from_user(from_user);
+				} while (rc || n_objects <= *from_user);
+				center_object = *from_user;
+			}
 			break;
 		}
-		getchar();
+		
 	}
 	printf("n_objects: %d\n", n_objects);
 	return 0;
 }
 
 int main(int argc, char *argv[]) {
-	int i=1;
+	int rc, i=1;
 	int sleep = 20000;
 	int delay = 0;
 
@@ -243,7 +262,12 @@ int main(int argc, char *argv[]) {
 		}
 		if (!strcmp(argv[i], "-c")) {
 			centering = 1;
-			printf("centering enabled\n");
+			if (i < argc-1) {
+				if (argv[i+1][0] != '-') {
+					center_object = atoi(argv[++i]);
+				}
+			}
+			printf("centering enabled on object #%d\n", center_object);
 			i++;
 			continue;
 		}
@@ -315,13 +339,33 @@ int double_from_user(double *from_user) {
 	i=0;
 	while ((c=getchar()) != '\n') {
 		word[i++] = c;
-		if ( ((c-'0') > 9) && c != '.') {
+		if ( ((c-'0') > 9 || (c-'0') < 0) && c != '.' && c != '-') {
 			printf("Input must be a number using '.' as decimal\n");
 			while ((c=getchar()) != '\n'); /* Skips to end of line */
 			return -1;
 		}
 	}
 	*from_user = atof(word);
+	return 0;
+}
+
+int int_from_user(int *from_user) {
+	int i=0;
+	char c;
+	char word[sizeof(char) * 64];
+	for (i=0; i<sizeof(char)*64; i++) {
+		word[i] = 0;
+	}
+	i=0;
+	while ((c=getchar()) != '\n') {
+		word[i++] = c;
+		if ( ((c-'0') > 9 || (c-'0') < 0) && c != '-') {
+			printf("Input must be an integer number\n");
+			while ((c=getchar()) != '\n'); /* Skips to end of line */
+			return -1;
+		}
+	}
+	*from_user = atoi(word);
 	return 0;
 }
 

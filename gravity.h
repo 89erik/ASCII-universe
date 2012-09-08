@@ -23,7 +23,7 @@ typedef struct object {
 
 void print();
 
-double double_from_user();
+int double_from_user(double *from_user);
 void print_object_values(object *o);
 
 /* Physics */
