@@ -12,7 +12,7 @@
 
 
 
-
+#define TRUE 1
 
 int array_height = 22;
 int array_width = 40;
@@ -42,10 +42,6 @@ void print() {
 		offset_x = (array_width/2) - x[center_object];
 		offset_y = (array_height/2) - y[center_object];
 	}
-
-	/* Applies offset for first object */
-	/*x[0] += offset_x;
-	y[0] += offset_y;*/
 
 	/* Sets objects and applies offset */
 	int i;
@@ -136,8 +132,10 @@ int add_custom_objects() {
 	double *from_user = malloc(sizeof(double));
 
 	printf("Adding custom objects...\n");
-	while (1) {
+	while (TRUE) {
+		
 		size_t new_size = sizeof(object)*(++n_objects);
+//		printf("New size: %d\n", new_size);
 		tmp = (object*)realloc(objects, new_size);
 		if (tmp) {
 			objects = tmp;
@@ -184,6 +182,10 @@ int add_custom_objects() {
 
 		objects[i].ax = 0;
 		objects[i].ay = 0;
+
+
+		print_object_values(&objects[i]);
+
 		printf("Type Y to add more, enter to start simulation... ");
 		char c = getchar();
 		
@@ -205,11 +207,14 @@ int add_custom_objects() {
 					rc = int_from_user(from_user);
 				} while (rc || n_objects <= *from_user);
 				center_object = *from_user;
+				free(from_user);
 			}
 			break;
 		}
+		i++;
 		
 	}
+	free(from_user);
 	printf("n_objects: %d\n", n_objects);
 	return 0;
 }
@@ -232,7 +237,7 @@ int main(int argc, char *argv[]) {
 			printf("-s x\t Sleeps x microseconds between each tick. \n");
 			printf("-h x\t Sets height to x. \n");
 			printf("-w x\t Sets witdh to x. \n");
-			printf("-c\t Always displays the first object in the center.\n");
+			printf("-c x\t Always displays object #x (zero indexed) in the center.\n");
 			printf("-o\t Add your own objects. \n");
 			return -1;
 		}
@@ -304,7 +309,7 @@ int main(int argc, char *argv[]) {
 		}
 		
 	}*/
-	while (1) {
+	while (TRUE) {
 		c1 = clock();
 		//if ((c1-c0) >= 1) {
 			print();
