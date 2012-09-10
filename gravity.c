@@ -24,6 +24,8 @@ int offset_y = 0;
 int n_objects;
 object *objects;
 
+long print_delay = 20000000;
+
 
 
 void print() {
@@ -234,13 +236,24 @@ int main(int argc, char *argv[]) {
 	while (argc > i) {
 		if (!strcmp(argv[i], "--help")) {
 			printf("Commands:\n");
+			printf("Speed:\n");
 			printf("-d x\t Delays x ticks into simulation before start.\n");
 			printf("-s x\t Sleeps x microseconds between each tick. \n");
-			printf("-h x\t Sets height to x. \n");
-			printf("-w x\t Sets witdh to x. \n");
-			printf("-c x\t Always displays object #x (zero indexed) in the center.\n");
-			printf("-do x y\t Draws the screen with offset x,y (overruled by centering)\n");
+			printf("\t Shorter sleep = faster simulation. Default is 20000 µs\n");
+			printf("-pd x\t Waits x nanoseconds between each print. \n");
+			printf("\t Shorter wait = faster framerate. Default is 20000000 ns\n");
+		
+			printf("\nDisplay:\n");
+			printf("-h x\t Sets print area height to x. \n");
+			printf("-w x\t Sets print area width to x. \n");
+			printf("-c x\t Centering. Always display object #x (zero indexed) in the center.\n");
+			printf("\t The centered object will appear stationary in the center.\n");
+			printf("-do x y\t Draws with offset x,y (overruled by centering)\n");
+			printf("\t x,y will be the top left point\n");
+			printf("\nSimulation:\n");			
 			printf("-o\t Add your own objects. \n");
+
+
 			return -1;
 		}
 		if (!strcmp(argv[i], "-d")) {
@@ -313,27 +326,45 @@ int main(int argc, char *argv[]) {
 	usleep(1000000);
 	for (i=0; i<delay; i++) tick();
 
-	c0 = clock();
-	/*while (1) {
-		c1 = clock();
-		if ((c1-c0) >= 10000) {
-			printf("%d\n", c1-c0);
-			c0 = clock();
-		}
-		
-	}*/
-	while (TRUE) {
-		c1 = clock();
-		//if ((c1-c0) >= 1) {
-			print();
-		//	printf("%d\n",(int)(c1-c0));
-		//	c0 = clock();
-		//}
-		tick();
-		usleep(sleep);
-	}
+	loop(sleep);
 	
 	return 0;
+}
+
+void loop(int sleep) {
+	int rc;
+	clockid_t clk_id = CLOCK_REALTIME;
+	struct timespec *res = malloc(sizeof(struct timespec));
+	clock_getres(clk_id, res);
+	
+	rc = clock_gettime(clk_id, res);
+	long last_s = res->tv_sec;
+	long last_ns = res->tv_nsec;
+	long current_s;
+	long current_ns;
+	unsigned long long delta;
+
+	while (TRUE) {
+		tick();
+		usleep(sleep);
+
+
+		rc = clock_gettime(clk_id, res);
+		current_s = res->tv_sec;
+		current_ns = res->tv_nsec;
+		
+		delta = current_s - last_s;
+		delta *= 1000000000;
+		delta += current_ns - last_ns;
+
+		if (delta > print_delay) {
+			print();
+
+			rc = clock_gettime(clk_id, res);
+			last_s = res->tv_sec;
+			last_ns = res->tv_nsec;
+		}
+	}
 }
 
 void print_object_values(object *o) {

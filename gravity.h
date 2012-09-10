@@ -27,6 +27,8 @@ int double_from_user(double *from_user);
 int int_from_user(int *from_user);
 void print_object_values(object *o);
 
+void loop(int sleep);
+
 /* Physics */
 double distance(object *o1, object *o2);
 char intersects(object *o1, object *o2);
