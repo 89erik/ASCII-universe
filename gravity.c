@@ -18,6 +18,9 @@ int array_height = 22;
 int array_width = 40;
 char centering = 0;
 int center_object = 0;
+int offset_x = 0;
+int offset_y = 0;
+
 int n_objects;
 object *objects;
 
@@ -35,9 +38,7 @@ void print() {
 		r[center_object] = nearbyint(objects[center_object].r);
 	}
 	
-	/* Determines offset */
-	int offset_x = 0;
-	int offset_y = 0;
+	/* Determines offset for centering */
 	if (centering) {
 		offset_x = (array_width/2) - x[center_object];
 		offset_y = (array_height/2) - y[center_object];
@@ -238,6 +239,7 @@ int main(int argc, char *argv[]) {
 			printf("-h x\t Sets height to x. \n");
 			printf("-w x\t Sets witdh to x. \n");
 			printf("-c x\t Always displays object #x (zero indexed) in the center.\n");
+			printf("-do x y\t Draws the screen with offset x,y (overruled by centering)\n");
 			printf("-o\t Add your own objects. \n");
 			return -1;
 		}
@@ -273,6 +275,17 @@ int main(int argc, char *argv[]) {
 				}
 			}
 			printf("centering enabled on object #%d\n", center_object);
+			i++;
+			continue;
+		}
+		if (!strcmp(argv[i], "-do")) {
+			if (i < argc-1) {
+				if (argv[i+1][0] != '-' && argv[i+2][0] != '-') {
+					offset_x = atoi(argv[++i]);
+					offset_y = atoi(argv[++i]);
+				}
+			}
+			printf("Draws screen with offset (%d,%d)\n", offset_x, offset_y);
 			i++;
 			continue;
 		}
