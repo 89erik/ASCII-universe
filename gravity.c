@@ -292,7 +292,7 @@ int main(int argc, char *argv[]) {
 			continue;
 		}
 		if (!strcmp(argv[i], "-do")) {
-			if (i < argc-1) {
+			if (i < argc-2) {
 				if (argv[i+1][0] != '-' && argv[i+2][0] != '-') {
 					offset_x = atoi(argv[++i]);
 					offset_y = atoi(argv[++i]);
@@ -308,6 +308,17 @@ int main(int argc, char *argv[]) {
 			i++;
 			continue;
 		}
+		if (!strcmp(argv[i], "-pd")) {
+			if (i < argc-1) {
+				if (argv[i+1][0] != '-') {
+					print_delay = atol(argv[++i]);
+				}
+			}
+			printf("Print delay set to %ld\n", print_delay);
+			i++;
+			continue;
+		}
+		i++;
 	}
 
 	if (add_objects) {
@@ -365,6 +376,7 @@ void loop(int sleep) {
 			last_ns = res->tv_nsec;
 		}
 	}
+	free(res);
 }
 
 void print_object_values(object *o) {
