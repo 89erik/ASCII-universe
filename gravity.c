@@ -1,4 +1,5 @@
 #include "gravity.h"
+//#include "user_input.h"	
 //#include "physics.h"
 
 
@@ -10,22 +11,19 @@
 #include <time.h>
 #include <math.h>
 
-
-
-#define TRUE 1
-
 int array_height = 22;
 int array_width = 40;
+
 char centering = 0;
 int center_object = 0;
+
+int n_objects;
+struct object *objects;
+
 int offset_x = 0;
 int offset_y = 0;
 
-int n_objects;
-object *objects;
-
 long print_delay = 20000000;
-
 
 
 void print() {
@@ -54,7 +52,7 @@ void print() {
 		r[i] = nearbyint(objects[i].r);
 	}
 
-	/* Prints the universe */
+	/* Prints the universe... */
 	int j,n;
 	char c;
 	for (i=0; i<array_height; i++) {
@@ -98,7 +96,7 @@ void print() {
 
 void add_default_objects() {
 	n_objects = 3;
-	objects = (object*) malloc(sizeof(object)*n_objects);
+	objects = (struct object*) malloc(sizeof(struct object)*n_objects);
 
 	objects[0].x = 16;
 	objects[0].y = 10;
@@ -128,99 +126,7 @@ void add_default_objects() {
 	objects[2].ay = 0;
 }
 
-int add_custom_objects() {
-	n_objects = 0;
-	object *tmp;
-	int rc, i = 0;
-	double *from_user = malloc(sizeof(double));
 
-	printf("Adding custom objects...\n");
-	while (TRUE) {
-		
-		size_t new_size = sizeof(object)*(++n_objects);
-//		printf("New size: %d\n", new_size);
-		tmp = (object*)realloc(objects, new_size);
-		if (tmp) {
-			objects = tmp;
-		} else {
-			printf("Reallocating of memory for the %dth object failed.\n", i);
-			printf("Exiting...\n");
-			return -1;
-		}
-		do {
-			printf("Enter x posision: ");
-			rc = double_from_user(from_user);
-			objects[i].x = *from_user;
-		} while (rc);
-
-		do {
-			printf("Enter y posision: ");
-			rc = double_from_user(from_user);
-			objects[i].y = *from_user;
-		} while (rc);
-
-		do {
-			printf("Enter mass: ");
-			rc = double_from_user(from_user);
-			objects[i].m = *from_user;
-		} while (rc);
-
-		do {
-			printf("Enter radius: ");
-			rc = double_from_user(from_user);
-			objects[i].r = *from_user;
-		} while (rc);
-
-		do {
-			printf("Enter x velocity: ");
-			rc = double_from_user(from_user);
-			objects[i].vx = *from_user;
-		} while (rc);
-
-		do {
-			printf("Enter y velocity: ");
-			rc = double_from_user(from_user);
-			objects[i].vy = *from_user;
-		} while (rc);
-
-		objects[i].ax = 0;
-		objects[i].ay = 0;
-
-
-		print_object_values(&objects[i]);
-
-		printf("Type Y to add more, enter to start simulation... ");
-		char c = getchar();
-		
-		if (c != '\n') {		
-			while (getchar() != '\n'); /* Skips to line feed */
-		}
-
-		if (c != 'Y' && c != 'y') {		/* No more objects */
-			printf("\n");
-
-			if (centering && n_objects <= center_object) {	/* Invalid center object */
-				printf("You added %d objects, but centered object was set to %d\n", 
-						n_objects, center_object);
-				printf("Objects are zero-indexed, meaning the first object is object #0\n");
-				int *from_user = malloc(sizeof(int));
-				int rc;
-				do {
-					printf("Enter new center object (less than %d)...", n_objects);			
-					rc = int_from_user(from_user);
-				} while (rc || n_objects <= *from_user);
-				center_object = *from_user;
-				free(from_user);
-			}
-			break;
-		}
-		i++;
-		
-	}
-	free(from_user);
-	printf("n_objects: %d\n", n_objects);
-	return 0;
-}
 
 int main(int argc, char *argv[]) {
 	int rc, i=1;
@@ -232,7 +138,7 @@ int main(int argc, char *argv[]) {
 	c0 = clock();
 	t0 = time(NULL);
 
-	char add_objects = 0;
+	char add_objects = FALSE;
 	while (argc > i) {
 		if (!strcmp(argv[i], "--help")) {
 			printf("Commands:\n");
@@ -252,9 +158,7 @@ int main(int argc, char *argv[]) {
 			printf("\t x,y will be the top left point\n");
 			printf("\nSimulation:\n");			
 			printf("-o\t Add your own objects. \n");
-
-
-			return -1;
+			return 0;
 		}
 		if (!strcmp(argv[i], "-d")) {
 			delay = atoi(argv[++i]);
@@ -379,7 +283,7 @@ void loop(int sleep) {
 	free(res);
 }
 
-void print_object_values(object *o) {
+void print_object_values(struct object *o) {
 	printf("x position: \t%f\n", o->x);
 	printf("y position: \t%f\n", o->y);
 	printf("mass: \t\t%f\n", o->m);
@@ -390,110 +294,6 @@ void print_object_values(object *o) {
 	printf("y acceleration: %f\n", o->ay);
 }
 
-int double_from_user(double *from_user) {
-	int i=0;
-	char c;
-	char word[sizeof(char) * 64];
-	for (i=0; i<sizeof(char)*64; i++) {
-		word[i] = 0;
-	}
-	i=0;
-	while ((c=getchar()) != '\n') {
-		word[i++] = c;
-		if ( ((c-'0') > 9 || (c-'0') < 0) && c != '.' && c != '-') {
-			printf("Input must be a number using '.' as decimal\n");
-			while ((c=getchar()) != '\n'); /* Skips to end of line */
-			return -1;
-		}
-	}
-	*from_user = atof(word);
-	return 0;
-}
-
-int int_from_user(int *from_user) {
-	int i=0;
-	char c;
-	char word[sizeof(char) * 64];
-	for (i=0; i<sizeof(char)*64; i++) {
-		word[i] = 0;
-	}
-	i=0;
-	while ((c=getchar()) != '\n') {
-		word[i++] = c;
-		if ( ((c-'0') > 9 || (c-'0') < 0) && c != '-') {
-			printf("Input must be an integer number\n");
-			while ((c=getchar()) != '\n'); /* Skips to end of line */
-			return -1;
-		}
-	}
-	*from_user = atoi(word);
-	return 0;
-}
-
-
-/* Physics */
-/*
- * Calculates the distance between two objects
- */
-double distance(object *o1, object *o2){
-	double dx = o2->x - o1->x;
-	double dy = o2->y - o1->y;
-	
-	double d_squared = pow(dx, 2) + pow(dy, 2);
-	return sqrt(d_squared);
-}
-
-/*
- * Determines if o1 and o2 are intersecting
- */
-char intersects(object *o1, object *o2) {
-	double dist = distance(o1,o2);
-	if (dist < (o1->r + o2->r)) {
-		return 1;
-	}
-	return 0;
-}
-
-/*
- * Calculates the gravitational force between 
- * two objects and updates the first objects' 
- * acceleration accordingly.
- */ 
-void apply_grav_force(object *o1, object *o2) {
-	if (o1->m == 0 || o2->m == 0) return;
-	if (intersects(o1, o2)) return;
-
-	double dist = distance(o1,o2);
-	double sqrd_dist = pow(dist, 2);
-	double a = GRAV_CONST * o2->m / sqrd_dist;	/* a = GM/r² */
-	
-	double dx = abs(o2->x - o1->x);
-	double dy = abs(o2->y - o1->y);
-	double theta;
-
-	double ax;
-	double ay;
-
-	if (o1->y < o2->y) {		/* o1 above */
-		theta = atan(dx/dy);
-		ax = a * sin(theta);
-		ay = a * cos(theta);
-
-	} else if (o1->y > o2->y) {	/* o1 under */
-		theta = atan(dy/dx);
-		ax = a * cos(theta);
-		ay = -a * sin(theta);
-	} else if (o1->y == o2->y) {	/* Equal heights */
-		ay = 0;
-		ax = a;
-	}
-	if (o1->x > o2->x) {		/* o1 to the right*/
-		ax = -ax;
-	}
-
-	o1->ax += ax;
-	o1->ay += ay;
-}
 
 
 /* Object*/ 
@@ -522,10 +322,10 @@ void tick() {
 }
 
 
-object *create_object(int i, double x, double y, double m, double r,
+struct object *create_object(int i, double x, double y, double m, double r,
 		   double vx, double vy, double ax, double ay) {
 
-	object *o = /*(*object)*/ malloc(sizeof(object));
+	struct object *o = malloc(sizeof(struct object));
 	o->x = x;
 	o->y = y;
 	o->m = m;

@@ -1,16 +1,16 @@
 #ifndef GRAVITY_H /* avoiding header recursion */
 #define GRAVITY_H
 
+#define TRUE 1
+#define FALSE 0
 
-#define GRAV_CONST 0.01
-#ifndef M_PI
- #define M_PI 3.14159265358979323846
-#endif 
-
-//#include "object.h"
+extern int n_objects;
+extern struct object *objects;
+extern char centering;
+extern int center_object;
 
 
-typedef struct object {
+struct object {
 	double 	x;	/* Position X */
 	double	y;	/* Position Y */
 	double 	m;	/* Mass */
@@ -19,24 +19,13 @@ typedef struct object {
 	double 	vy;	/* Velocity Y */
 	double 	ax;	/* Acceleration X */
 	double 	ay;	/* Acceleration Y */
-}object;
+};
 
 void print();
-
-int double_from_user(double *from_user);
-int int_from_user(int *from_user);
-void print_object_values(object *o);
-
+void print_object_values(struct object *o);
 void loop(int sleep);
-
-/* Physics */
-double distance(object *o1, object *o2);
-char intersects(object *o1, object *o2);
-void apply_grav_force(object *o1, object *o2);
-
-/* Object */
 void tick();
-object *create_object(int i, double x, double y, double m, double r,
+struct object *create_object(int i, double x, double y, double m, double r,
 		   double vx, double vy, double ax, double ay);
 
 
