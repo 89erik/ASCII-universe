@@ -10,6 +10,7 @@
 double distance(struct object *o1, struct object *o2);
 char intersects(struct object *o1, struct object *o2);
 void apply_grav_force(struct object *o1, struct object *o2);
+void tick();
 
 
 #endif

@@ -43,6 +43,9 @@ int int_from_user(int *from_user) {
 	return 0;
 }
 
+/*
+ * Allows the user to input objects
+ */
 int add_custom_objects() {
 	n_objects = 0;
 	struct object *tmp;
@@ -134,4 +137,39 @@ int add_custom_objects() {
 	free(from_user);
 	printf("n_objects: %d\n", n_objects);
 	return 0;
+}
+
+/*
+ * Initializes three default objects for the simulation
+ */
+void add_default_objects() {
+	n_objects = 3;
+	objects = (struct object*) malloc(sizeof(struct object)*n_objects);
+
+	objects[0].x = 16;
+	objects[0].y = 10;
+	objects[0].m = 1000.0;
+	objects[0].r = 2.5;
+	objects[0].vx = 0;
+	objects[0].vy = 0;
+	objects[0].ax = 0;
+	objects[0].ay = 0;
+
+	objects[1].x = 4;
+	objects[1].y = 10;
+	objects[1].m = 1.5;
+	objects[1].r = 1;
+	objects[1].vx = -0.5;
+	objects[1].vy = 1;
+	objects[1].ax = 0;
+	objects[1].ay = 0;
+
+	objects[2].x = 16;
+	objects[2].y = 50;
+	objects[2].m = 0.7;
+	objects[2].r = 0.9;
+	objects[2].vx = -0.3;
+	objects[2].vy = -0.3;
+	objects[2].ax = 0;
+	objects[2].ay = 0;
 }

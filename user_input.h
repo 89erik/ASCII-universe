@@ -5,5 +5,6 @@
 int double_from_user(double *from_user);
 int int_from_user(int *from_user);
 int add_custom_objects();
+void add_default_objects();
 
 #endif

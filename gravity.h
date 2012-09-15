@@ -8,6 +8,12 @@ extern int n_objects;
 extern struct object *objects;
 extern char centering;
 extern int center_object;
+extern int n_objects;
+
+extern char centering;
+extern int center_object;
+extern int offset_x;
+extern int offset_y;
 
 
 struct object {
@@ -21,10 +27,9 @@ struct object {
 	double 	ay;	/* Acceleration Y */
 };
 
-void print();
 void print_object_values(struct object *o);
-void loop(int sleep);
-void tick();
+void loop(int sleep, long print_delay);
+
 struct object *create_object(int i, double x, double y, double m, double r,
 		   double vx, double vy, double ax, double ay);
 

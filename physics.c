@@ -4,7 +4,6 @@
 #include <stdlib.h>
 
 
-
 /*
  * Calculates the distance between two objects
  */
@@ -30,7 +29,7 @@ char intersects(struct object *o1, struct object *o2) {
 
 /*
  * Calculates the gravitational force between 
- * two objects and updates the first objects' 
+ * two objects and updates the first object's 
  * acceleration accordingly.
  */ 
 void apply_grav_force(struct object *o1, struct object *o2) {
@@ -67,4 +66,27 @@ void apply_grav_force(struct object *o1, struct object *o2) {
 
 	o1->ax += ax;
 	o1->ay += ay;
+}
+
+/*
+ * Performs the physics of one time quantum
+ */
+void tick() {
+	int i,j;
+	for (i=0; i<n_objects; i++) {
+		/* Determines gravity acceleration*/
+		objects[i].ax = 0;
+		objects[i].ay = 0;
+		for (j=0; j<n_objects; j++) {
+			if (i==j) continue;
+			apply_grav_force(&objects[i], &objects[j]);
+		}
+		/* Applies acceleration to speed */
+		objects[i].vx += objects[i].ax;
+		objects[i].vy += objects[i].ay;
+
+		/* Moves */
+		objects[i].x += objects[i].vx;
+		objects[i].y += objects[i].vy;
+	}
 }

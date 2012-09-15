@@ -1,7 +1,7 @@
 #include "gravity.h"
-//#include "user_input.h"	
-//#include "physics.h"
-
+#include "user_input.h"	
+#include "physics.h"
+#include "ascii_graphics.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,8 +11,6 @@
 #include <time.h>
 #include <math.h>
 
-int array_height = 22;
-int array_width = 40;
 
 char centering = 0;
 int center_object = 0;
@@ -23,115 +21,15 @@ struct object *objects;
 int offset_x = 0;
 int offset_y = 0;
 
-long print_delay = 20000000;
 
-
-void print() {
-	int x[n_objects];	/* rounded x-pos */
-	int y[n_objects];	/* rounded y-pos */
-	int r[n_objects];	/* rounded radius */
-	
-	/* Sets centered object */
-	if (n_objects > 0) {
-		x[center_object] = nearbyint(objects[center_object].x);
-		y[center_object] = nearbyint(objects[center_object].y);
-		r[center_object] = nearbyint(objects[center_object].r);
-	}
-	
-	/* Determines offset for centering */
-	if (centering) {
-		offset_x = (array_width/2) - x[center_object];
-		offset_y = (array_height/2) - y[center_object];
-	}
-
-	/* Sets objects and applies offset */
-	int i;
-	for (i=0; i<n_objects; i++) {
-		x[i] = nearbyint(objects[i].x) + offset_x;
-		y[i] = nearbyint(objects[i].y) + offset_y;
-		r[i] = nearbyint(objects[i].r);
-	}
-
-	/* Prints the universe... */
-	int j,n;
-	char c;
-	for (i=0; i<array_height; i++) {
-		for (j=0; j<array_width; j++) {
-			c = ' '; 
-			
-			/* Prints border */
-			if (j == 0 || j == array_width -1) {
-				c = '|';
-			} else if (i == 0 || i == array_height -1) {
-				c = '-';
-			}
-			
-			/* Prints objects */
-			for (n=0; n<n_objects; n++) {
-				
-				/* Center of object */
-				if (j == x[n] && i == y[n]) {
-					c = '0'+n;
-					continue;
-				}
-				
-				/* Non-center of object */
-				char right = (j >= (x[n] - r[n]));
-				char left  = (j <= (x[n] + r[n]));
-				char over  = (i >= (y[n] - r[n]));
-				char under = (i <= (y[n] + r[n]));
-
-				if (right && left && over && under) {
-					c = '0'+n;
-				}
-			}
-			printf("%c ", c);
-		}
-		printf("\n");
-	}
-	printf("\n");
-}
-
-
-
-void add_default_objects() {
-	n_objects = 3;
-	objects = (struct object*) malloc(sizeof(struct object)*n_objects);
-
-	objects[0].x = 16;
-	objects[0].y = 10;
-	objects[0].m = 1000.0;
-	objects[0].r = 2.5;
-	objects[0].vx = 0;
-	objects[0].vy = 0;
-	objects[0].ax = 0;
-	objects[0].ay = 0;
-
-	objects[1].x = 4;
-	objects[1].y = 10;
-	objects[1].m = 1.5;
-	objects[1].r = 1;
-	objects[1].vx = -0.5;
-	objects[1].vy = 1;
-	objects[1].ax = 0;
-	objects[1].ay = 0;
-
-	objects[2].x = 16;
-	objects[2].y = 50;
-	objects[2].m = 0.7;
-	objects[2].r = 0.9;
-	objects[2].vx = -0.3;
-	objects[2].vy = -0.3;
-	objects[2].ax = 0;
-	objects[2].ay = 0;
-}
-
-
-
+/* 
+ * Collects arguments from the user and starts simulation
+ */
 int main(int argc, char *argv[]) {
 	int rc, i=1;
 	int sleep = 20000;
 	int delay = 0;
+	long print_delay = 20000000;
 
 	clock_t c0, c1;
 	time_t  t0, t1;
@@ -241,12 +139,20 @@ int main(int argc, char *argv[]) {
 	usleep(1000000);
 	for (i=0; i<delay; i++) tick();
 
-	loop(sleep);
+	loop(sleep, print_delay);
 	
 	return 0;
 }
 
-void loop(int sleep) {
+/*
+ * Runs the simulation.
+ * Performs an eternal loop with 3 main stages:
+ *     1. Perform the physics of one time quantum
+ *     2. Sleep for the given amount of time
+ *     3. Draw the screen (if enough time has passed 
+ *        according to the given print delay)
+ */
+void loop(int sleep, long print_delay) {
 	int rc;
 	clockid_t clk_id = CLOCK_REALTIME;
 	struct timespec *res = malloc(sizeof(struct timespec));
@@ -283,6 +189,9 @@ void loop(int sleep) {
 	free(res);
 }
 
+/*
+ * Prints the values of a given object
+ */
 void print_object_values(struct object *o) {
 	printf("x position: \t%f\n", o->x);
 	printf("y position: \t%f\n", o->y);
@@ -295,33 +204,9 @@ void print_object_values(struct object *o) {
 }
 
 
-
-/* Object*/ 
-
-
-void tick() {
-	int i,j;
-	for (i=0; i<n_objects; i++) {
-		/* Gravity acceleration*/
-		objects[i].ax = 0;
-		//set_ax(&objects[i], 0);
-		objects[i].ay = 0;
-		for (j=0; j<n_objects; j++) {
-			if (i==j) continue;
-			apply_grav_force(&objects[i], &objects[j]);
-		}
-		/* Accelerates */
-		objects[i].vx += objects[i].ax;
-		objects[i].vy += objects[i].ay;
-
-		/* Moves */
-		objects[i].x += objects[i].vx;
-		objects[i].y += objects[i].vy;
-	}
-
-}
-
-
+/*
+ * Creates and initializes an object
+ */
 struct object *create_object(int i, double x, double y, double m, double r,
 		   double vx, double vy, double ax, double ay) {
 
