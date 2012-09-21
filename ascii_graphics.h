@@ -1,9 +1,6 @@
-#ifndef ASCII_PRINT_H /* avoiding header recursion */
+#ifndef ASCII_PRINT_H
 #define ASCII_PRINT_H
 
-void print();
-
-extern int array_height;
-extern int array_width;
+void print(void);
 
 #endif

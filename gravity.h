@@ -1,37 +1,16 @@
-#ifndef GRAVITY_H /* avoiding header recursion */
+#ifndef GRAVITY_H
 #define GRAVITY_H
 
 #define TRUE 1
 #define FALSE 0
 
-extern int n_objects;
-extern struct object *objects;
-extern char centering;
-extern int center_object;
-extern int n_objects;
+#include "physics.h"
 
-extern char centering;
-extern int center_object;
-extern int offset_x;
-extern int offset_y;
-
-
-struct object {
-	double 	x;	/* Position X */
-	double	y;	/* Position Y */
-	double 	m;	/* Mass */
-	double 	r; 	/* Radius */
-	double 	vx;	/* Velocity X */
-	double 	vy;	/* Velocity Y */
-	double 	ax;	/* Acceleration X */
-	double 	ay;	/* Acceleration Y */
-};
 
 void print_object_values(struct object *o);
 void loop(int sleep, long print_delay);
 
-struct object *create_object(int i, double x, double y, double m, double r,
-		   double vx, double vy, double ax, double ay);
+//struct object *create_object(int i, double x, double y, double m, double r, double vx, double vy, double ax, double ay);
 
 
 

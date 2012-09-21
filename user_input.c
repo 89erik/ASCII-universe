@@ -1,13 +1,21 @@
+#include "physics.h"
 #include "gravity.h"
 #include <stdio.h>
 #include <stdlib.h>
+
+#define STRING_MAX 64
+
+extern int n_objects;
+extern struct object *objects;
+extern char centering;
+extern int center_object;
 
 
 int double_from_user(double *from_user) {
 	int i=0;
 	char c;
-	char word[sizeof(char) * 64];
-	for (i=0; i<sizeof(char)*64; i++) {
+	char word[STRING_MAX];
+	for (i=0; i<STRING_MAX; i++) {
 		word[i] = 0;
 	}
 	i=0;
@@ -26,8 +34,8 @@ int double_from_user(double *from_user) {
 int int_from_user(int *from_user) {
 	int i=0;
 	char c;
-	char word[sizeof(char) * 64];
-	for (i=0; i<sizeof(char)*64; i++) {
+	char word[STRING_MAX];
+	for (i=0; i<STRING_MAX; i++) {
 		word[i] = 0;
 	}
 	i=0;
@@ -46,7 +54,7 @@ int int_from_user(int *from_user) {
 /*
  * Allows the user to input objects
  */
-int add_custom_objects() {
+int add_custom_objects(void) {
 	n_objects = 0;
 	struct object *tmp;
 	int rc, i = 0;
@@ -135,14 +143,13 @@ int add_custom_objects() {
 		
 	}
 	free(from_user);
-	printf("n_objects: %d\n", n_objects);
 	return 0;
 }
 
 /*
  * Initializes three default objects for the simulation
  */
-void add_default_objects() {
+void add_default_objects(void) {
 	n_objects = 3;
 	objects = (struct object*) malloc(sizeof(struct object)*n_objects);
 

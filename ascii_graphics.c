@@ -1,11 +1,19 @@
-#include "gravity.h"
+#include "physics.h"
 #include <stdio.h>
 #include <math.h>
 
 int array_height = 22;
 int array_width = 40;
 
-void print() {
+extern char centering;
+extern int center_object;
+extern int offset_x;
+extern int offset_y;
+
+extern int n_objects;
+extern struct object *objects;
+
+void print(void) {
 	int x[n_objects];	/* rounded x-pos */
 	int y[n_objects];	/* rounded y-pos */
 	int r[n_objects];	/* rounded radius */

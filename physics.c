@@ -4,16 +4,17 @@
 #include <stdlib.h>
 
 
+extern int n_objects;
+extern struct object *objects;
+
 /*
  * Calculates the distance between two objects
  */
 double distance(struct object *o1, struct object *o2){
 	double dx = o2->x - o1->x;
 	double dy = o2->y - o1->y;
-	
-	double d_squared = pow(dx, 2) + pow(dy, 2);
-	//printf("distance = %f\n", sqrt(d_squared));
-	return sqrt(d_squared);
+
+	return sqrt(pow(dx, 2) + pow(dy, 2));
 }
 
 /*
@@ -71,7 +72,7 @@ void apply_grav_force(struct object *o1, struct object *o2) {
 /*
  * Performs the physics of one time quantum
  */
-void tick() {
+void tick(void) {
 	int i,j;
 	for (i=0; i<n_objects; i++) {
 		/* Determines gravity acceleration*/

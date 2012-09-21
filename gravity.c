@@ -1,6 +1,5 @@
 #include "gravity.h"
 #include "user_input.h"	
-#include "physics.h"
 #include "ascii_graphics.h"
 
 #include <stdio.h>
@@ -12,7 +11,7 @@
 #include <math.h>
 
 
-char centering = 0;
+char centering = FALSE;
 int center_object = 0;
 
 int n_objects;
@@ -27,16 +26,14 @@ int offset_y = 0;
  */
 int main(int argc, char *argv[]) {
 	int rc, i=1;
-	int sleep = 20000;
 	int delay = 0;
+	int sleep = 20000;
 	long print_delay = 20000000;
-
-	clock_t c0, c1;
-	time_t  t0, t1;
-	c0 = clock();
-	t0 = time(NULL);
-
 	char add_objects = FALSE;
+
+	extern int array_height;
+	extern int array_width;
+	
 	while (argc > i) {
 		if (!strcmp(argv[i], "--help")) {
 			printf("Commands:\n");
@@ -54,6 +51,7 @@ int main(int argc, char *argv[]) {
 			printf("\t The centered object will appear stationary in the center.\n");
 			printf("-do x y\t Draws with offset x,y (overruled by centering)\n");
 			printf("\t x,y will be the top left point\n");
+
 			printf("\nSimulation:\n");			
 			printf("-o\t Add your own objects. \n");
 			return 0;
@@ -135,10 +133,9 @@ int main(int argc, char *argv[]) {
 		print_object_values(&objects[i]);
 		printf("\n");
 	}
-
 	usleep(1000000);
-	for (i=0; i<delay; i++) tick();
 
+	for (i=0; i<delay; i++) tick();
 	loop(sleep, print_delay);
 	
 	return 0;
@@ -206,7 +203,7 @@ void print_object_values(struct object *o) {
 
 /*
  * Creates and initializes an object
- */
+ *//*
 struct object *create_object(int i, double x, double y, double m, double r,
 		   double vx, double vy, double ax, double ay) {
 
@@ -220,5 +217,5 @@ struct object *create_object(int i, double x, double y, double m, double r,
 	o->ax = ax;
 	o->ay = ay;
 	return o;
-}
+}*/
 
