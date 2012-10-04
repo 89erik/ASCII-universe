@@ -1,22 +1,17 @@
-Gravity simulator. This version uses the terminal to display the simulation.
-I plan to write a GUI for it eventually. 
+# Gravity simulator
+A gravity simulator in two dimensions. The simulation is visualized by the terminal.
 
-The file 'input' is an example of a fairly stable two-planet solar system. 
+The file 'two_planets.sim' is an example of a fairly stable two-planet solar system. 
 To use it, run the program as follows:
 
-$./gravity -o -c 0 -h 55 -w 55 < input
+$./gravity -o -c 0 -h 55 -w 55 < two_planets.sim
 
--o 	means you are adding custom objects (from the input file)
+* -o 		means you are adding custom objects (needed to use the input file)
+* -c 0 		means you want object 0 in the center at all times
+* -h 55 	print area height 55 (your screen resolution must be at least 1080 pixels in height and your terminal filling the screen before run)
+* -w 55		print area width 55
+* < two_planets.sim uses the file two_planets.sim as the input for objects. If absent, you will be prompted to input your objects your self.
 
--c 0 	means you want object 0 in the center at all times
+You can also use the help flag to get an explanation for all options:
 
--h 55 	print area heigh 55 (your screen resolution must be at least 1080 pixels
-	in height and your terminal filling the screen before run)
-
--w 55	print area width 55
-
-< input	means you are using the file input as input. If absent, you can input
-	your objects your self
-
-Also you can use the help flag to get an explanation for all options:
 $./gravity --help
