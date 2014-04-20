@@ -1,17 +1,16 @@
 #include "gravity.h"
 #include "user_input.h"	
-#include "ascii_graphics.h"
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
 #include <time.h>
 #include <math.h>
 
-
-char centering = FALSE;
+bool centering = false;
 int center_object = 0;
 
 int n_objects;
@@ -20,16 +19,15 @@ struct object *objects;
 int offset_x = 0;
 int offset_y = 0;
 
-
 /* 
  * Collects arguments from the user and starts simulation
  */
-int main(int argc, char *argv[]) {
+int init_simulation(int argc, char *argv[]) {
 	int rc, i=1;
 	int delay = 0;
 	int sleep = 20000;
 	long print_delay = 20000000;
-	char add_objects = FALSE;
+	bool add_objects = false;
 
 	extern int array_height;
 	extern int array_width;
@@ -54,8 +52,8 @@ int main(int argc, char *argv[]) {
 
 			printf("\nSimulation:\n");			
 			printf("-o\t Add your own objects. \n");
-			return 0;
-		}
+		    exit(0);
+        }
 		if (!strcmp(argv[i], "-d")) {
 			delay = atoi(argv[++i]);
 			printf("delay set to %d\n", delay);
@@ -65,18 +63,6 @@ int main(int argc, char *argv[]) {
 		if (!strcmp(argv[i], "-s")) {
 			sleep = atoi(argv[++i]);
 			printf("sleep set to %d\n", sleep);
-			i++;
-			continue;
-		}
-		if (!strcmp(argv[i], "-h")) {
-			array_height = atoi(argv[++i]);
-			printf("height set to %d\n", array_height);
-			i++;
-			continue;
-		}
-		if (!strcmp(argv[i], "-w")) {
-			array_width = atoi(argv[++i]);
-			printf("width set to %d\n", array_width);
 			i++;
 			continue;
 		}
@@ -133,57 +119,10 @@ int main(int argc, char *argv[]) {
 		print_object_values(&objects[i]);
 		printf("\n");
 	}
-	usleep(1000000);
 
 	for (i=0; i<delay; i++) tick();
-	loop(sleep, print_delay);
 	
-	return 0;
-}
-
-/*
- * Runs the simulation.
- * Performs an eternal loop with 3 main stages:
- *     1. Perform the physics of one time quantum
- *     2. Sleep for the given amount of time
- *     3. Draw the screen (if enough time has passed 
- *        according to the given print delay)
- */
-void loop(int sleep, long print_delay) {
-	int rc;
-	clockid_t clk_id = CLOCK_REALTIME;
-	struct timespec *res = malloc(sizeof(struct timespec));
-	clock_getres(clk_id, res);
-	
-	rc = clock_gettime(clk_id, res);
-	long last_s = res->tv_sec;
-	long last_ns = res->tv_nsec;
-	long current_s;
-	long current_ns;
-	unsigned long long delta;
-
-	while (TRUE) {
-		tick();
-		usleep(sleep);
-
-
-		rc = clock_gettime(clk_id, res);
-		current_s = res->tv_sec;
-		current_ns = res->tv_nsec;
-		
-		delta = current_s - last_s;
-		delta *= 1000000000;
-		delta += current_ns - last_ns;
-
-		if (delta > print_delay) {
-			print();
-
-			rc = clock_gettime(clk_id, res);
-			last_s = res->tv_sec;
-			last_ns = res->tv_nsec;
-		}
-	}
-	free(res);
+    return 0;
 }
 
 /*
@@ -199,23 +138,4 @@ void print_object_values(struct object *o) {
 	printf("x acceleration: %f\n", o->ax);
 	printf("y acceleration: %f\n", o->ay);
 }
-
-
-/*
- * Creates and initializes an object
- *//*
-struct object *create_object(int i, double x, double y, double m, double r,
-		   double vx, double vy, double ax, double ay) {
-
-	struct object *o = malloc(sizeof(struct object));
-	o->x = x;
-	o->y = y;
-	o->m = m;
-	o->r = r;
-	o->vx = vx;
-	o->vy = vy;
-	o->ax = ax;
-	o->ay = ay;
-	return o;
-}*/
 

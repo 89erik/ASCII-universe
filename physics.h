@@ -1,13 +1,15 @@
 #ifndef PHYSICS_H
 #define PHYSICS_H
 
+#include <stdbool.h>
+
 #define GRAV_CONST 0.01
 #ifndef M_PI
  #define M_PI 3.14159265358979323846
 #endif 
 
 
-struct object {
+typedef struct object {
 	double 	x;	/* Position X */
 	double	y;	/* Position Y */
 	double 	m;	/* Mass */
@@ -16,11 +18,11 @@ struct object {
 	double 	vy;	/* Velocity Y */
 	double 	ax;	/* Acceleration X */
 	double 	ay;	/* Acceleration Y */
-};
+} object_t;
 
 
 double distance(struct object *o1, struct object *o2);
-char intersects(struct object *o1, struct object *o2);
+bool intersects(struct object *o1, struct object *o2);
 void apply_grav_force(struct object *o1, struct object *o2);
 void tick(void);
 

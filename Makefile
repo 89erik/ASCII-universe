@@ -1,9 +1,9 @@
 CC=gcc
-CFLAGS=-c 
-LDFLAGS=-lm -lrt
+CFLAGS= -g -c `pkg-config --cflags gtk+-2.0` 
+LDFLAGS=-lm -lrt `pkg-config --libs gtk+-2.0` 
 TARGET=universe
 
-SOURCES=gravity.c physics.c user_input.c ascii_graphics.c
+SOURCES=gravity.c physics.c user_input.c gui.c
 OBJECTS=$(SOURCES:.c=.o)
 
 .PHONY : all

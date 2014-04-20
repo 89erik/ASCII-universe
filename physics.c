@@ -1,7 +1,9 @@
 #include "gravity.h"
 #include "physics.h"
-#include <math.h>
+
+#include <stdbool.h>
 #include <stdlib.h>
+#include <math.h>
 
 
 extern int n_objects;
@@ -20,12 +22,12 @@ double distance(struct object *o1, struct object *o2){
 /*
  * Determines if o1 and o2 are intersecting
  */
-char intersects(struct object *o1, struct object *o2) {
+bool intersects(struct object *o1, struct object *o2) {
 	double dist = distance(o1,o2);
 	if (dist < (o1->r + o2->r)) {
-		return TRUE;
+		return true;
 	}
-	return FALSE;
+	return false;
 }
 
 /*

@@ -3,4 +3,4 @@ a.out
 test.c
 *.o
 universe
-
+*.swp
