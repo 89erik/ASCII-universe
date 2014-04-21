@@ -7,12 +7,12 @@
 
 
 extern int n_objects;
-extern struct object *objects;
+extern object_t* objects;
 
 /*
  * Calculates the distance between two objects
  */
-double distance(struct object *o1, struct object *o2){
+double distance(object_t* o1, object_t* o2){
 	double dx = o2->x - o1->x;
 	double dy = o2->y - o1->y;
 
@@ -22,7 +22,7 @@ double distance(struct object *o1, struct object *o2){
 /*
  * Determines if o1 and o2 are intersecting
  */
-bool intersects(struct object *o1, struct object *o2) {
+bool intersects(object_t* o1, object_t* o2) {
 	double dist = distance(o1,o2);
 	if (dist < (o1->r + o2->r)) {
 		return true;
@@ -35,7 +35,7 @@ bool intersects(struct object *o1, struct object *o2) {
  * two objects and updates the first object's 
  * acceleration accordingly.
  */ 
-void apply_grav_force(struct object *o1, struct object *o2) {
+void apply_grav_force(object_t* o1, object_t* o2) {
 	if (o1->m == 0 || o2->m == 0) return;
 	if (intersects(o1, o2)) return;
 

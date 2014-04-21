@@ -4,17 +4,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <unistd.h>
 #include <string.h>
-#include <sys/types.h>
-#include <time.h>
-#include <math.h>
 
 bool centering = false;
 int center_object = 0;
 
 int n_objects;
-struct object *objects;
+object_t* objects;
 
 int offset_x = 0;
 int offset_y = 0;
@@ -29,9 +25,6 @@ int init_simulation(int argc, char *argv[]) {
 	long print_delay = 20000000;
 	bool add_objects = false;
 
-	extern int array_height;
-	extern int array_width;
-	
 	while (argc > i) {
 		if (!strcmp(argv[i], "--help")) {
 			printf("Commands:\n");
@@ -67,7 +60,7 @@ int init_simulation(int argc, char *argv[]) {
 			continue;
 		}
 		if (!strcmp(argv[i], "-c")) {
-			centering = 1;
+			centering = true;
 			if (i < argc-1) {
 				if (argv[i+1][0] != '-') {
 					center_object = atoi(argv[++i]);
@@ -128,7 +121,7 @@ int init_simulation(int argc, char *argv[]) {
 /*
  * Prints the values of a given object
  */
-void print_object_values(struct object *o) {
+void print_object_values(object_t* o) {
 	printf("x position: \t%f\n", o->x);
 	printf("y position: \t%f\n", o->y);
 	printf("mass: \t\t%f\n", o->m);

@@ -80,12 +80,12 @@ static void clear() {
                       update_rect.width, update_rect.height);
 }
 
-extern char centering;
+extern bool centering;
 extern int center_object;
 extern int offset_x;
 extern int offset_y;
 extern int n_objects;
-extern struct object* objects;
+extern object_t* objects;
 
 int zoom = 1;
 #define APPLY_ZOOM() {x *= zoom; y *= zoom; r *= zoom;}
@@ -144,39 +144,38 @@ int main(int argc, char *argv[]) {
 
     gtk_init (&argc, &argv);
 
-    window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-    gtk_widget_set_name (window, "Test Input");
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_widget_set_name(window, "Test Input");
 
-    vbox = gtk_vbox_new (FALSE, 0);
-    gtk_container_add (GTK_CONTAINER (window), vbox);
-    gtk_widget_show (vbox);
+    vbox = gtk_vbox_new(FALSE, 0);
+    gtk_container_add(GTK_CONTAINER (window), vbox);
+    gtk_widget_show(vbox);
 
     /* Close window action */
-    g_signal_connect (window, "destroy", G_CALLBACK (quit), NULL); 
+    g_signal_connect(window, "destroy", G_CALLBACK (quit), NULL); 
 
     /* Create the drawing area */
     drawing_area = gtk_drawing_area_new ();
-    gtk_widget_set_size_request (GTK_WIDGET (drawing_area), screen_width, screen_height);
-    gtk_box_pack_start (GTK_BOX (vbox), drawing_area, TRUE, TRUE, 0);
-    gtk_widget_show (drawing_area);
+    gtk_widget_set_size_request(GTK_WIDGET (drawing_area), screen_width, screen_height);
+    gtk_box_pack_start(GTK_BOX (vbox), drawing_area, TRUE, TRUE, 0);
+    gtk_widget_show(drawing_area);
 
     /* Signals used to handle backing pixmap */
-
-    g_signal_connect (drawing_area, "expose_event", G_CALLBACK (expose_event), NULL);
-    g_signal_connect (drawing_area, "configure_event", G_CALLBACK (configure_event), NULL);
+    g_signal_connect(drawing_area, "expose_event", G_CALLBACK (expose_event), NULL);
+    g_signal_connect(drawing_area, "configure_event", G_CALLBACK (configure_event), NULL);
 
     g_timeout_add(5, (GSourceFunc) time_handler, (gpointer) window);
 
     /* Exit button */
-    button = gtk_button_new_with_label ("Exit");
-    gtk_box_pack_start (GTK_BOX (vbox), button, FALSE, FALSE, 0);
-    g_signal_connect_swapped (button, "clicked", G_CALLBACK (quit), window);
-    gtk_widget_show (button);
+    button = gtk_button_new_with_label("Quit");
+    gtk_box_pack_start(GTK_BOX (vbox), button, FALSE, FALSE, 0);
+    g_signal_connect_swapped(button, "clicked", G_CALLBACK (quit), window);
+    gtk_widget_show(button);
 
-    gtk_widget_show (window);
+    gtk_widget_show(window);
 
     init_simulation(argc, argv);
-    gtk_main ();
+    gtk_main();
     return 0;
 }
 
