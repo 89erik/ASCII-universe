@@ -15,6 +15,16 @@ static int print_delay = 5;
 
 static gboolean running = false;
 
+extern bool centering;
+extern int center_object;
+extern int offset_x;
+extern int offset_y;
+extern int n_objects;
+extern object_t** objects;
+
+int zoom = 1;
+#define APPLY_ZOOM() {x *= zoom; y *= zoom; r *= zoom;}
+
 typedef struct coordinate {
     int x;
     int y;
@@ -50,6 +60,69 @@ static gboolean expose_event(GtkWidget* widget, GdkEventExpose* event) {
                        event->area.width, event->area.height);
 
     return FALSE;
+}
+
+#define KEY_UP    65362
+#define KEY_LEFT  65361
+#define KEY_DOWN  65364
+#define KEY_RIGHT 65363
+#define KEY_SHIFT 65505
+#define SCROLL    10
+#define SCROLL_EXTRA 10
+gboolean shift = FALSE;
+
+static gboolean key_press(GtkWidget* widget, GdkEventKey* event) {
+    uint key = event->keyval;
+    printf("key pressed:    %d\n", key);
+    switch (key) {
+        case KEY_UP:
+            offset_y += SCROLL + (shift * SCROLL_EXTRA);
+            break;
+        case KEY_DOWN:
+            offset_y -= SCROLL + (shift * SCROLL_EXTRA);
+            break;
+        case KEY_LEFT:
+            offset_x += SCROLL + (shift * SCROLL_EXTRA);
+            break;
+        case KEY_RIGHT:
+            offset_x -= SCROLL + (shift * SCROLL_EXTRA);
+            break;
+        case KEY_SHIFT:
+            shift = TRUE;
+            break;
+        case 'c':
+            centering = !centering;
+            break;
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+        {
+            int c = key - '0';
+            if (c >= 0 && c <= n_objects) {
+                center_object = c;
+            }
+            break;
+        }
+    }
+
+    return TRUE;
+}
+
+static gboolean key_release(GtkWidget* widget, GdkEventKey* event) {
+    uint key = event->keyval;
+    switch (key) {
+        case KEY_SHIFT:
+            shift = FALSE;
+            break;
+    }
+    return TRUE;
 }
 
 /* Draw a rectangle on the screen */
@@ -91,15 +164,6 @@ static void clear() {
                       update_rect.width, update_rect.height);
 }
 
-extern bool centering;
-extern int center_object;
-extern int offset_x;
-extern int offset_y;
-extern int n_objects;
-extern object_t** objects;
-
-int zoom = 1;
-#define APPLY_ZOOM() {x *= zoom; y *= zoom; r *= zoom;}
 
 void gui_print() {
     int i;
@@ -108,7 +172,7 @@ void gui_print() {
     clear();
 
     /* Sets centered object */
-    if (centering && n_objects > 0) {
+    if (centering) {
         object_t* c = objects[center_object];
         x = nearbyint(c->x);
         y = nearbyint(c->y);
@@ -205,15 +269,17 @@ int main(int argc, char *argv[]) {
     /* Signals used to handle backing pixmap */
     g_signal_connect(drawing_area, "expose_event", G_CALLBACK (expose_event), NULL);
     g_signal_connect(drawing_area, "configure_event", G_CALLBACK (configure_event), NULL);
-
-    g_signal_connect (drawing_area, "button_press_event",
-                    G_CALLBACK (button_press_event), NULL);
+    g_signal_connect(drawing_area, "button_press_event", G_CALLBACK (button_press_event), NULL);
 
     gtk_widget_set_events (drawing_area, GDK_EXPOSURE_MASK
                          | GDK_LEAVE_NOTIFY_MASK
                          | GDK_BUTTON_PRESS_MASK
                          | GDK_POINTER_MOTION_MASK
                          | GDK_POINTER_MOTION_HINT_MASK);
+    
+    /* Key events */
+    g_signal_connect(window, "key_press_event", G_CALLBACK(key_press), NULL);
+    g_signal_connect(window, "key_release_event", G_CALLBACK(key_release), NULL);
 
     /* Stop button */
     stop_button = gtk_button_new_with_label("start/stop");
