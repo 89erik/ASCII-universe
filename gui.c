@@ -15,6 +15,11 @@ static int print_delay = 5;
 
 static gboolean running = false;
 
+typedef struct coordinate {
+    int x;
+    int y;
+} coordinate_t;
+
 GtkWidget* window;
 
 static gboolean configure_event(GtkWidget* widget, GdkEventConfigure* event) {
@@ -149,6 +154,32 @@ void start_stop() {
     running = !running;
 }
 
+
+gboolean object_adding_in_progress = FALSE;
+coordinate_t initial_click;
+
+static gboolean button_press_event(GtkWidget* widget, GdkEventButton *event) {
+    if (pixmap == NULL) return FALSE;
+    int x,y;
+    GdkModifierType state;
+    gdk_window_get_pointer (event->window, &x, &y, &state);
+    
+    if (object_adding_in_progress) {
+        double vx = (double) (x - initial_click.x) / 64;
+        double vy = (double) (y - initial_click.y) / 64;
+
+        insert_new_object(initial_click.x - offset_x, initial_click.y - offset_y, 5, 5, vx, vy);
+        object_adding_in_progress = FALSE;
+    
+    } else {
+        initial_click.x = x;
+        initial_click.y = y;
+        object_adding_in_progress = TRUE;
+    }
+
+    return TRUE;
+}
+
 int main(int argc, char *argv[]) {
     GtkWidget* vbox;
     GtkWidget* stop_button;
@@ -174,6 +205,15 @@ int main(int argc, char *argv[]) {
     /* Signals used to handle backing pixmap */
     g_signal_connect(drawing_area, "expose_event", G_CALLBACK (expose_event), NULL);
     g_signal_connect(drawing_area, "configure_event", G_CALLBACK (configure_event), NULL);
+
+    g_signal_connect (drawing_area, "button_press_event",
+                    G_CALLBACK (button_press_event), NULL);
+
+    gtk_widget_set_events (drawing_area, GDK_EXPOSURE_MASK
+                         | GDK_LEAVE_NOTIFY_MASK
+                         | GDK_BUTTON_PRESS_MASK
+                         | GDK_POINTER_MOTION_MASK
+                         | GDK_POINTER_MOTION_HINT_MASK);
 
     /* Stop button */
     stop_button = gtk_button_new_with_label("start/stop");
