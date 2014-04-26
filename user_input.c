@@ -1,5 +1,6 @@
 #include "physics.h"
 #include "gravity.h"
+#include "object.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,7 +8,7 @@
 #define STRING_MAX 64
 
 extern int n_objects;
-extern object_t* objects;
+extern object_t** objects;
 extern char centering;
 extern int center_object;
 
@@ -57,15 +58,15 @@ int int_from_user(int *from_user) {
  */
 int add_custom_objects(void) {
 	n_objects = 0;
-	struct object *tmp;
+	object_t** tmp;
 	int rc, i = 0;
 	double *from_user = malloc(sizeof(double));
 
 	printf("Adding custom objects...\n");
 	while (true) {
 		
-		size_t new_size = sizeof(struct object)*(++n_objects);
-		tmp = (struct object*)realloc(objects, new_size);
+		size_t new_size = sizeof(object_t*) * (++n_objects);
+		tmp = (object_t**) realloc(objects, new_size);
 		if (tmp) {
 			objects = tmp;
 		} else {
@@ -76,44 +77,44 @@ int add_custom_objects(void) {
 		do {
 			printf("Enter x posision: ");
 			rc = double_from_user(from_user);
-			objects[i].x = *from_user;
+			objects[i]->x = *from_user;
 		} while (rc);
 
 		do {
 			printf("Enter y posision: ");
 			rc = double_from_user(from_user);
-			objects[i].y = *from_user;
+			objects[i]->y = *from_user;
 		} while (rc);
 
 		do {
 			printf("Enter mass: ");
 			rc = double_from_user(from_user);
-			objects[i].m = *from_user;
+			objects[i]->m = *from_user;
 		} while (rc);
 
 		do {
 			printf("Enter radius: ");
 			rc = double_from_user(from_user);
-			objects[i].r = *from_user;
+			objects[i]->r = *from_user;
 		} while (rc);
 
 		do {
 			printf("Enter x velocity: ");
 			rc = double_from_user(from_user);
-			objects[i].vx = *from_user;
+			objects[i]->vx = *from_user;
 		} while (rc);
 
 		do {
 			printf("Enter y velocity: ");
 			rc = double_from_user(from_user);
-			objects[i].vy = *from_user;
+			objects[i]->vy = *from_user;
 		} while (rc);
 
-		objects[i].ax = 0;
-		objects[i].ay = 0;
+		objects[i]->ax = 0;
+		objects[i]->ay = 0;
 
 
-		print_object_values(&objects[i]);
+		print_object_values(objects[i]);
 
 		printf("Type Y to add more, enter to start simulation... ");
 		char c = getchar();
@@ -151,42 +152,12 @@ int add_custom_objects(void) {
  * Initializes three default objects for the simulation
  */
 void add_default_objects(void) {
-	n_objects = 4;
-	objects = (struct object*) malloc(sizeof(struct object)*n_objects);
+#undef DEFAULT_OBJECTS
+#ifdef DEFAULT_OBJECTS
+    insert_new_object(0,0,40000,10,0,0);
+    insert_new_object(200,200,50,1,-0.8,0.8);
+    insert_new_object(100,100,3,0.9,-1,1);
+    insert_new_object(-300,-300,3,0.9,1.1,-0.3);
 
-	objects[0].x = 0;
-	objects[0].y = 0;
-	objects[0].m = 40000.0;
-	objects[0].r = 10;
-	objects[0].vx = 0;
-	objects[0].vy = 0;
-	objects[0].ax = 0;
-	objects[0].ay = 0;
-
-	objects[1].x = 200;
-	objects[1].y = 200;
-	objects[1].m = 50;
-	objects[1].r = 1;
-	objects[1].vx = -0.8;
-	objects[1].vy = 0.8;
-	objects[1].ax = 0;
-	objects[1].ay = 0;
-
-	objects[2].x = 100;
-	objects[2].y = 100;
-	objects[2].m = 3;
-	objects[2].r = 0.9;
-	objects[2].vx = -1;
-	objects[2].vy = 1;
-	objects[2].ax = 0;
-	objects[2].ay = 0;
-
-	objects[3].x = -300;
-	objects[3].y = -300;
-	objects[3].m = 3;
-	objects[3].r = 0.9;
-	objects[3].vx = 1.1;
-	objects[3].vy = -0.3;
-	objects[3].ax = 0;
-	objects[3].ay = 0;
+#endif
 }

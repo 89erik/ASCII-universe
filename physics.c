@@ -7,7 +7,7 @@
 
 
 extern int n_objects;
-extern object_t* objects;
+extern object_t** objects;
 
 /*
  * Calculates the distance between two objects
@@ -78,18 +78,18 @@ void tick(void) {
 	int i,j;
 	for (i=0; i<n_objects; i++) {
 		/* Determines gravity acceleration*/
-		objects[i].ax = 0;
-		objects[i].ay = 0;
+		objects[i]->ax = 0;
+		objects[i]->ay = 0;
 		for (j=0; j<n_objects; j++) {
 			if (i==j) continue;
-			apply_grav_force(&objects[i], &objects[j]);
+			apply_grav_force(objects[i], objects[j]);
 		}
 		/* Applies acceleration to speed */
-		objects[i].vx += objects[i].ax;
-		objects[i].vy += objects[i].ay;
+		objects[i]->vx += objects[i]->ax;
+		objects[i]->vy += objects[i]->ay;
 
 		/* Moves */
-		objects[i].x += objects[i].vx;
-		objects[i].y += objects[i].vy;
+		objects[i]->x += objects[i]->vx;
+		objects[i]->y += objects[i]->vy;
 	}
 }

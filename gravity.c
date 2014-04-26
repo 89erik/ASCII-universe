@@ -9,9 +9,6 @@
 bool centering = false;
 int center_object = 0;
 
-int n_objects;
-object_t* objects;
-
 int offset_x = 0;
 int offset_y = 0;
 
@@ -107,12 +104,6 @@ int init_simulation(int argc, char *argv[]) {
 		add_default_objects();
 	}
 	
-	printf("\nSimulating following objects:\n");
-	for (i=0; i<n_objects; i++) {
-		print_object_values(&objects[i]);
-		printf("\n");
-	}
-
 	for (i=0; i<delay; i++) tick();
 	
     return 0;

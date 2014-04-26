@@ -1,5 +1,6 @@
 #include "gravity.h"
 #include "physics.h"
+#include "object.h"
 
 #include <stdlib.h>
 #include <math.h>
@@ -90,7 +91,7 @@ extern int center_object;
 extern int offset_x;
 extern int offset_y;
 extern int n_objects;
-extern object_t* objects;
+extern object_t** objects;
 
 int zoom = 1;
 #define APPLY_ZOOM() {x *= zoom; y *= zoom; r *= zoom;}
@@ -103,7 +104,7 @@ void gui_print() {
 
     /* Sets centered object */
     if (centering && n_objects > 0) {
-        object_t* c = &(objects[center_object]);
+        object_t* c = objects[center_object];
         x = nearbyint(c->x);
         y = nearbyint(c->y);
 
@@ -114,9 +115,9 @@ void gui_print() {
     }
 
     for (i=0; i<n_objects; i++) {
-        x = nearbyint(objects[i].x);
-        y = nearbyint(objects[i].y);
-        r = nearbyint(objects[i].r);
+        x = nearbyint(objects[i]->x);
+        y = nearbyint(objects[i]->y);
+        r = nearbyint(objects[i]->r);
 
         APPLY_ZOOM();
 
