@@ -10,6 +10,11 @@ static GtkWidget* drawing_area;
 
 static int screen_width = 1200;
 static int screen_height = 800;
+static int print_delay = 5;
+
+static gboolean running = false;
+
+GtkWidget* window;
 
 static gboolean configure_event(GtkWidget* widget, GdkEventConfigure* event) {
     if (pixmap) {
@@ -133,14 +138,19 @@ void quit() {
 static gboolean time_handler(GtkWidget* widget) {
     tick();
     gui_print();
+    return running;
+}
 
-    return true;
+void start_stop() {
+    if (!running) {
+        g_timeout_add(print_delay, (GSourceFunc) time_handler, (gpointer) window);
+    }
+    running = !running;
 }
 
 int main(int argc, char *argv[]) {
-    GtkWidget *window;
-    GtkWidget *vbox;
-    GtkWidget *button;
+    GtkWidget* vbox;
+    GtkWidget* stop_button;
 
     gtk_init (&argc, &argv);
 
@@ -164,17 +174,18 @@ int main(int argc, char *argv[]) {
     g_signal_connect(drawing_area, "expose_event", G_CALLBACK (expose_event), NULL);
     g_signal_connect(drawing_area, "configure_event", G_CALLBACK (configure_event), NULL);
 
-    g_timeout_add(5, (GSourceFunc) time_handler, (gpointer) window);
-
-    /* Exit button */
-    button = gtk_button_new_with_label("Quit");
-    gtk_box_pack_start(GTK_BOX (vbox), button, FALSE, FALSE, 0);
-    g_signal_connect_swapped(button, "clicked", G_CALLBACK (quit), window);
-    gtk_widget_show(button);
+    /* Stop button */
+    stop_button = gtk_button_new_with_label("start/stop");
+    gtk_box_pack_start(GTK_BOX (vbox), stop_button, FALSE, FALSE, 0);
+    g_signal_connect_swapped(stop_button, "clicked", G_CALLBACK (start_stop), window);
+    gtk_widget_show(stop_button);
 
     gtk_widget_show(window);
 
     init_simulation(argc, argv);
+
+    start_stop();
+
     gtk_main();
     return 0;
 }
