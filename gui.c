@@ -34,6 +34,7 @@ typedef struct coordinate {
 
 gboolean object_adding_in_progress = FALSE;
 coordinate_t initial_click;
+coordinate_t pointer_pos;
 
 static gboolean configure_event(GtkWidget* widget, GdkEventConfigure* event) {
     if (pixmap) {
@@ -72,6 +73,7 @@ static gboolean expose_event(GtkWidget* widget, GdkEventExpose* event) {
 #define KEY_SHIFT 65505
 #define KEY_PLUS  65451
 #define KEY_MINUS 65453
+#define KEY_ESCAPE 65307
 #define SCROLL    10
 #define SCROLL_EXTRA 10
 gboolean shift = FALSE;
@@ -129,6 +131,9 @@ static gboolean key_press(GtkWidget* widget, GdkEventKey* event) {
                 offset_y += screen_height/2;
             }
             break;
+        case KEY_ESCAPE:
+            object_adding_in_progress = FALSE;
+            break;
     }
 
     return TRUE;
@@ -183,15 +188,6 @@ static void clear() {
                       update_rect.width, update_rect.height);
 }
 
-void draw_velocity_arch() {
-    coordinate_t current_pos;
-    GdkModifierType state;
-    gdk_window_get_pointer(window, &current_pos.x, &current_pos.y, &state);
-
-    draw(initial_click.x, initial_click.y, 2);
-    draw(current_pos.x, current_pos.y, 2);
-}
-
 void gui_print() {
     int i;
     int x,y,r;
@@ -227,7 +223,12 @@ void gui_print() {
         }
     }
     if (object_adding_in_progress) {
-        draw_velocity_arch();
+        int size = 10;
+        draw(initial_click.x, initial_click.y, size);
+        gdk_draw_line(pixmap,
+                drawing_area->style->white_gc,
+                initial_click.x, initial_click.y,
+                pointer_pos.x, pointer_pos.y);
     }
 }
 
@@ -245,14 +246,30 @@ void start_stop() {
     running = !running;
 }
 
+static gboolean motion_notify_event(GtkWidget* widget, GdkEventButton *event) {
+    if (!object_adding_in_progress) return;
+    GdkModifierType state;
+    gdk_window_get_pointer (event->window, &pointer_pos.x, &pointer_pos.y, &state);
+}
 
+#define MOUSE_LEFT_BUTTON  1
+#define MOUSE_RIGHT_BUTTON 3
 static gboolean button_press_event(GtkWidget* widget, GdkEventButton *event) {
     if (pixmap == NULL) return FALSE;
     int x,y;
     GdkModifierType state;
-    gdk_window_get_pointer (event->window, &x, &y, &state);
-    
-    if (object_adding_in_progress) {
+    gdk_window_get_pointer(event->window, &x, &y, &state);
+
+    if (event->button == MOUSE_RIGHT_BUTTON) {
+        double vx, vy;
+        if (centering) {
+            vx = objects[center_object]->vx;
+            vy = objects[center_object]->vy;
+        }
+        insert_new_object(x-offset_x, y-offset_y, 10, 10, vx, vy);
+        object_adding_in_progress = FALSE;
+
+    } else if (object_adding_in_progress) {
         double vx = (double) (x - initial_click.x) / 64;
         double vy = (double) (y - initial_click.y) / 64;
 
@@ -264,25 +281,16 @@ static gboolean button_press_event(GtkWidget* widget, GdkEventButton *event) {
             vy += objects[center_object]->vy;
         }
 
-        insert_new_object(x, y, 5, 5, vx, vy);
+        insert_new_object(x, y, 10, 10, vx, vy);
         object_adding_in_progress = FALSE;
     
     } else {
         initial_click.x = x;
         initial_click.y = y;
+        pointer_pos = initial_click;
         object_adding_in_progress = TRUE;
     }
 
-    return TRUE;
-}
-
-static gboolean drag_start_event(GtkWidget* widget, GdkEventButton *event) {
-    printf("starting drag\n");
-    return TRUE;
-}
-
-static gboolean drag_motion_event(GtkWidget* widget, GdkEventButton *event) {
-    printf("drag motion\n");
     return TRUE;
 }
 
@@ -312,6 +320,8 @@ int main(int argc, char *argv[]) {
     g_signal_connect(drawing_area, "expose_event", G_CALLBACK (expose_event), NULL);
     g_signal_connect(drawing_area, "configure_event", G_CALLBACK (configure_event), NULL);
     g_signal_connect(drawing_area, "button_press_event", G_CALLBACK (button_press_event), NULL);
+
+    g_signal_connect(window, "motion_notify_event", G_CALLBACK(motion_notify_event), NULL);
 
     gtk_widget_set_events (drawing_area, GDK_EXPOSURE_MASK
                          | GDK_LEAVE_NOTIFY_MASK
