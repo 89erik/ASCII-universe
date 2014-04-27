@@ -171,6 +171,17 @@ static void draw(int x, int y, int size) {
                       update_rect.width, update_rect.height);
 }
 
+static void draw_circle(int x, int y, int diameter) {
+    if (diameter > 1) {
+        int x_corner = x - (diameter/2);
+        int y_corner = y - (diameter/2);
+        gdk_draw_arc(pixmap, drawing_area->style->white_gc, TRUE, 
+               x_corner, y_corner, diameter, diameter,0, 360*64 );
+    } else {
+        draw(x, y, diameter);
+    }
+}
+
 static void clear() {
     int x = 0;
     int y = 0;
@@ -223,12 +234,12 @@ void gui_print() {
 
         in_bounds = x < screen_width  && x >= 0 && y < screen_height && y >= 0;
         if (in_bounds) {
-            draw(x,y,r);
+            draw_circle(x,y,r);
         }
     }
     if (object_adding_in_progress) {
         int size = 10;
-        draw(initial_click.x, initial_click.y, size);
+        draw_circle(initial_click.x, initial_click.y, size);
         gdk_draw_line(pixmap,
                 drawing_area->style->white_gc,
                 initial_click.x, initial_click.y,
