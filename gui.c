@@ -132,8 +132,8 @@ static gboolean key_release(GtkWidget* widget, GdkEventKey* event) {
 static void draw(int x, int y, int size) {
     GdkRectangle update_rect;
 
-    update_rect.x = x - 5;
-    update_rect.y = y - 5;
+    update_rect.x = x - size/2;
+    update_rect.y = y - size/2;
     update_rect.width = size;
     update_rect.height = size;
     gdk_draw_rectangle (pixmap,
@@ -153,8 +153,8 @@ static void clear() {
 
     GdkRectangle update_rect;
 
-    update_rect.x = x - 5;
-    update_rect.y = y - 5;
+    update_rect.x = x;
+    update_rect.y = y;
     update_rect.width = size;
     update_rect.height = size;
     gdk_draw_rectangle (pixmap,
