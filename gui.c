@@ -74,6 +74,7 @@ static gboolean expose_event(GtkWidget* widget, GdkEventExpose* event) {
 #define KEY_PLUS  65451
 #define KEY_MINUS 65453
 #define KEY_ESCAPE 65307
+#define KEY_BACKSPACE 65288
 #define SCROLL    10
 #define SCROLL_EXTRA 10
 gboolean shift = FALSE;
@@ -133,6 +134,9 @@ static gboolean key_press(GtkWidget* widget, GdkEventKey* event) {
             break;
         case KEY_ESCAPE:
             object_adding_in_progress = FALSE;
+            break;
+        case KEY_BACKSPACE:
+            if (n_objects > 0) n_objects--;
             break;
     }
 
