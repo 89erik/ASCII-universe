@@ -8,6 +8,7 @@
 
 static GdkPixmap* pixmap = NULL;
 static GtkWidget* drawing_area;
+static GtkWidget* window;
 
 static int screen_width = 1200;
 static int screen_height = 800;
@@ -30,7 +31,9 @@ typedef struct coordinate {
     int y;
 } coordinate_t;
 
-GtkWidget* window;
+
+gboolean object_adding_in_progress = FALSE;
+coordinate_t initial_click;
 
 static gboolean configure_event(GtkWidget* widget, GdkEventConfigure* event) {
     if (pixmap) {
@@ -164,6 +167,14 @@ static void clear() {
                       update_rect.width, update_rect.height);
 }
 
+void draw_velocity_arch() {
+    coordinate_t current_pos;
+    GdkModifierType state;
+    gdk_window_get_pointer(window, &current_pos.x, &current_pos.y, &state);
+
+    draw(initial_click.x, initial_click.y, 2);
+    draw(current_pos.x, current_pos.y, 2);
+}
 
 void gui_print() {
     int i;
@@ -199,6 +210,9 @@ void gui_print() {
             draw(x,y,r);
         }
     }
+    if (object_adding_in_progress) {
+        draw_velocity_arch();
+    }
 }
 
 void quit() {
@@ -219,9 +233,6 @@ void start_stop() {
 }
 
 
-gboolean object_adding_in_progress = FALSE;
-coordinate_t initial_click;
-
 static gboolean button_press_event(GtkWidget* widget, GdkEventButton *event) {
     if (pixmap == NULL) return FALSE;
     int x,y;
@@ -232,7 +243,15 @@ static gboolean button_press_event(GtkWidget* widget, GdkEventButton *event) {
         double vx = (double) (x - initial_click.x) / 64;
         double vy = (double) (y - initial_click.y) / 64;
 
-        insert_new_object(initial_click.x - offset_x, initial_click.y - offset_y, 5, 5, vx, vy);
+        double x = initial_click.x - offset_x;
+        double y = initial_click.y - offset_y;
+
+        if (centering) {
+            vx += objects[center_object]->vx;
+            vy += objects[center_object]->vy;
+        }
+
+        insert_new_object(x, y, 5, 5, vx, vy);
         object_adding_in_progress = FALSE;
     
     } else {
@@ -241,6 +260,16 @@ static gboolean button_press_event(GtkWidget* widget, GdkEventButton *event) {
         object_adding_in_progress = TRUE;
     }
 
+    return TRUE;
+}
+
+static gboolean drag_start_event(GtkWidget* widget, GdkEventButton *event) {
+    printf("starting drag\n");
+    return TRUE;
+}
+
+static gboolean drag_motion_event(GtkWidget* widget, GdkEventButton *event) {
+    printf("drag motion\n");
     return TRUE;
 }
 
