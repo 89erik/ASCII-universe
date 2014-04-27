@@ -70,6 +70,8 @@ static gboolean expose_event(GtkWidget* widget, GdkEventExpose* event) {
 #define KEY_DOWN  65364
 #define KEY_RIGHT 65363
 #define KEY_SHIFT 65505
+#define KEY_PLUS  65451
+#define KEY_MINUS 65453
 #define SCROLL    10
 #define SCROLL_EXTRA 10
 gboolean shift = FALSE;
@@ -113,6 +115,20 @@ static gboolean key_press(GtkWidget* widget, GdkEventKey* event) {
             }
             break;
         }
+        case '+':
+        case KEY_PLUS:
+            zoom++;
+            offset_x -= screen_width/2;
+            offset_y -= screen_height/2;
+            break;
+        case '-':
+        case KEY_MINUS:
+            if (zoom > 1) {
+                zoom--;
+                offset_x += screen_width/2;
+                offset_y += screen_height/2;
+            }
+            break;
     }
 
     return TRUE;
