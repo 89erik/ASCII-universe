@@ -14,7 +14,7 @@ static int screen_width = 1200;
 static int screen_height = 800;
 static int print_delay = 5;
 
-static gboolean running = false;
+static gboolean running = true;
 
 extern bool centering;
 extern int center_object;
@@ -220,15 +220,12 @@ void quit() {
 }
 
 static gboolean time_handler(GtkWidget* widget) {
-    tick();
+    if (running) tick();
     gui_print();
-    return running;
+    return TRUE;
 }
 
 void start_stop() {
-    if (!running) {
-        g_timeout_add(print_delay, (GSourceFunc) time_handler, (gpointer) window);
-    }
     running = !running;
 }
 
@@ -320,7 +317,7 @@ int main(int argc, char *argv[]) {
 
     init_simulation(argc, argv);
 
-    start_stop();
+    g_timeout_add(print_delay, (GSourceFunc) time_handler, (gpointer) window);
 
     gtk_main();
     return 0;
