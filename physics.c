@@ -1,5 +1,6 @@
 #include "gravity.h"
 #include "physics.h"
+#include "object.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -8,6 +9,7 @@
 
 extern int n_objects;
 extern object_t** objects;
+extern int center_object;
 
 /*
  * Calculates the distance between two objects
@@ -22,12 +24,32 @@ double distance(object_t* o1, object_t* o2){
 /*
  * Determines if o1 and o2 are intersecting
  */
-bool intersects(object_t* o1, object_t* o2) {
+bool intersects_with_factor(object_t* o1, object_t* o2, double factor) {
 	double dist = distance(o1,o2);
-	if (dist < (o1->r + o2->r)) {
+	if (dist < (o1->r + o2->r) * factor) {
 		return true;
 	}
 	return false;
+}
+/*
+ * Determines if o1 and o2 are intersecting
+ */
+bool intersects(object_t* o1, object_t* o2) {
+	return intersects_with_factor(o1,o2,1); 
+}
+
+#define MAX_MERGE_VELOCITY    100
+#define MERGE_DISTANCE_FACTOR 0.5
+bool merge(object_t* o1, object_t* o2) {
+    double vxd, vyd; // Difference in speed
+   
+    if (!intersects_with_factor(o1,o2,MERGE_DISTANCE_FACTOR)) return false;
+
+    vxd = abs(o1->vx - o2->vx);
+    vyd = abs(o1->vy - o2->vy);
+    if (!(vxd < MAX_MERGE_VELOCITY && vyd < MAX_MERGE_VELOCITY)) return false;
+    
+    return true;
 }
 
 /*
@@ -37,7 +59,6 @@ bool intersects(object_t* o1, object_t* o2) {
  */ 
 void apply_grav_force(object_t* o1, object_t* o2) {
 	if (o1->m == 0 || o2->m == 0) return;
-	if (intersects(o1, o2)) return;
 
 	double dist = distance(o1,o2);
 	double sqrd_dist = pow(dist, 2);
@@ -81,7 +102,16 @@ void tick(void) {
 		objects[i]->ax = 0;
 		objects[i]->ay = 0;
 		for (j=0; j<n_objects; j++) {
-			if (i==j) continue;
+			if (objects[i] == objects[j]) continue;
+            if (intersects(objects[i], objects[j])) {
+                if (merge(objects[i], objects[j])) {
+                    merge_objects(objects[i], objects[j]);
+                    if (center_object == j) center_object = i;
+                    remove_object(j);
+                    j--; 
+                    continue;
+                }
+            }
 			apply_grav_force(objects[i], objects[j]);
 		}
 		/* Applies acceleration to speed */
@@ -91,5 +121,6 @@ void tick(void) {
 		/* Moves */
 		objects[i]->x += objects[i]->vx;
 		objects[i]->y += objects[i]->vy;
+
 	}
 }

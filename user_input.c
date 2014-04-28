@@ -152,7 +152,7 @@ int add_custom_objects(void) {
  * Initializes three default objects for the simulation
  */
 void add_default_objects(void) {
-#undef DEFAULT_OBJECTS
+#define DEFAULT_OBJECTS
 #ifdef DEFAULT_OBJECTS
     insert_new_object(0,0,40000,10,0,0);
     insert_new_object(200,200,50,1,-0.8,0.8);

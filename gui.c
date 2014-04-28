@@ -171,10 +171,11 @@ static void draw(int x, int y, int size) {
                       update_rect.width, update_rect.height);
 }
 
-static void draw_circle(int x, int y, int diameter) {
+static void draw_circle(int x, int y, int radius) {
+    int diameter = radius*2;
     if (diameter > 1) {
-        int x_corner = x - (diameter/2);
-        int y_corner = y - (diameter/2);
+        int x_corner = x - radius;
+        int y_corner = y - radius;
         gdk_draw_arc(pixmap, drawing_area->style->white_gc, TRUE, 
                x_corner, y_corner, diameter, diameter,0, 360*64 );
     } else {
