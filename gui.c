@@ -23,8 +23,7 @@ extern int offset_y;
 extern int n_objects;
 extern object_t** objects;
 
-int zoom = 1;
-#define APPLY_ZOOM() {x *= zoom; y *= zoom; r *= zoom;}
+double zoom = 1.0;
 
 typedef struct coordinate {
     int x;
@@ -119,9 +118,14 @@ static gboolean key_press(GtkWidget* widget, GdkEventKey* event) {
         }
         case '+':
         case KEY_PLUS:
-            zoom++;
-            offset_x -= screen_width/2;
-            offset_y -= screen_height/2;
+            if (zoom >= 1) {
+                zoom++;
+                offset_x -= screen_width/2;
+                offset_y -= screen_height/2;
+            } else {
+                zoom *= 2;
+            }
+
             break;
         case '-':
         case KEY_MINUS:
@@ -129,6 +133,8 @@ static gboolean key_press(GtkWidget* widget, GdkEventKey* event) {
                 zoom--;
                 offset_x += screen_width/2;
                 offset_y += screen_height/2;
+            } else {
+                zoom /= 2;
             }
             break;
         case KEY_ESCAPE:
@@ -211,6 +217,17 @@ static void clear() {
                       update_rect.width, update_rect.height);
 }
 
+void apply_coordinate_zoom(int* x, int* y) {
+    *x = (*x) * zoom;
+    *y = (*y) * zoom;
+}
+
+void apply_radius_zoom(int* r) {
+    *r = (*r) * zoom;
+    if (*r < 1) *r = 1;
+}
+
+//#define APPLY_ZOOM() {x *= zoom; y *= zoom; r *= zoom;}
 void gui_print() {
     int i;
     int x,y,r;
@@ -223,7 +240,7 @@ void gui_print() {
         x = nearbyint(c->x);
         y = nearbyint(c->y);
 
-        APPLY_ZOOM();
+        apply_coordinate_zoom(&x, &y);
 
         offset_x = (screen_width/2)  - x;
         offset_y = (screen_height/2) - y;
@@ -234,7 +251,8 @@ void gui_print() {
         y = nearbyint(objects[i]->y);
         r = nearbyint(objects[i]->r);
 
-        APPLY_ZOOM();
+        apply_coordinate_zoom(&x, &y);
+        apply_radius_zoom(&r);
 
         x += offset_x;
         y += offset_y;
@@ -247,7 +265,7 @@ void gui_print() {
     }
     if (object_adding_in_progress) {
         int size = 10;
-        draw_circle(initial_click.x, initial_click.y, size);
+        draw_circle(initial_click.x, initial_click.y, size*zoom);
         gdk_draw_line(pixmap,
                 drawing_area->style->white_gc,
                 initial_click.x, initial_click.y,
@@ -279,9 +297,9 @@ static gboolean motion_notify_event(GtkWidget* widget, GdkEventButton *event) {
 #define MOUSE_RIGHT_BUTTON 3
 static gboolean button_press_event(GtkWidget* widget, GdkEventButton *event) {
     if (pixmap == NULL) return FALSE;
-    int x,y;
+    int pointer_x, pointer_y;
     GdkModifierType state;
-    gdk_window_get_pointer(event->window, &x, &y, &state);
+    gdk_window_get_pointer(event->window, &pointer_x, &pointer_y, &state);
 
     if (event->button == MOUSE_RIGHT_BUTTON) {
         double vx, vy;
@@ -289,15 +307,18 @@ static gboolean button_press_event(GtkWidget* widget, GdkEventButton *event) {
             vx = objects[center_object]->vx;
             vy = objects[center_object]->vy;
         }
-        insert_new_object(x-offset_x, y-offset_y, 10, 10, vx, vy);
+        double x = (pointer_x - offset_x) / zoom;
+        double y = (pointer_y - offset_y) / zoom;
+
+        insert_new_object(x, y, 10, 10, vx, vy);
         object_adding_in_progress = FALSE;
 
     } else if (object_adding_in_progress) {
-        double vx = (double) (x - initial_click.x) / 64;
-        double vy = (double) (y - initial_click.y) / 64;
+        double vx = ((double) (pointer_x - initial_click.x) / 64) / zoom;
+        double vy = ((double) (pointer_y - initial_click.y) / 64) / zoom;
 
-        double x = initial_click.x - offset_x;
-        double y = initial_click.y - offset_y;
+        double x = (initial_click.x - offset_x) / zoom;
+        double y = (initial_click.y - offset_y) / zoom;
 
         if (centering) {
             vx += objects[center_object]->vx;
@@ -308,8 +329,8 @@ static gboolean button_press_event(GtkWidget* widget, GdkEventButton *event) {
         object_adding_in_progress = FALSE;
     
     } else {
-        initial_click.x = x;
-        initial_click.y = y;
+        initial_click.x = pointer_x;
+        initial_click.y = pointer_y;
         pointer_pos = initial_click;
         object_adding_in_progress = TRUE;
     }
