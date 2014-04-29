@@ -81,7 +81,6 @@ gboolean shift = FALSE;
 
 static gboolean key_press(GtkWidget* widget, GdkEventKey* event) {
     uint key = event->keyval;
-    printf("key pressed:    %d\n", key);
     switch (key) {
         case KEY_UP:
             offset_y += SCROLL + (shift * SCROLL_EXTRA);
@@ -137,6 +136,14 @@ static gboolean key_press(GtkWidget* widget, GdkEventKey* event) {
             break;
         case KEY_BACKSPACE:
             if (n_objects > 0) n_objects--;
+            break;
+
+        case ' ':
+            start_stop();
+            break;
+
+        default:
+            printf("key pressed:    %d (%c)\n", key, key);
             break;
     }
 
