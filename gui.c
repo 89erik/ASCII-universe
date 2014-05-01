@@ -18,22 +18,15 @@ static gboolean running = true;
 
 extern bool centering;
 extern int center_object;
-extern int offset_x;
-extern int offset_y;
+extern i_vec_t print_offset;
 extern int n_objects;
 extern object_t** objects;
 
 double zoom = 1.0;
 
-typedef struct coordinate {
-    int x;
-    int y;
-} coordinate_t;
-
-
 gboolean object_adding_in_progress = FALSE;
-coordinate_t initial_click;
-coordinate_t pointer_pos;
+i_vec_t initial_click;
+i_vec_t pointer_pos;
 
 static gboolean configure_event(GtkWidget* widget, GdkEventConfigure* event) {
     if (pixmap) {
@@ -51,6 +44,10 @@ static gboolean configure_event(GtkWidget* widget, GdkEventConfigure* event) {
                        widget->allocation.height);
 
     return TRUE;
+}
+
+void start_stop() {
+    running = !running;
 }
 
 /* Redraw the screen from the backing pixmap */
@@ -82,16 +79,16 @@ static gboolean key_press(GtkWidget* widget, GdkEventKey* event) {
     uint key = event->keyval;
     switch (key) {
         case KEY_UP:
-            offset_y += SCROLL + (shift * SCROLL_EXTRA);
+            print_offset.y += SCROLL + (shift * SCROLL_EXTRA);
             break;
         case KEY_DOWN:
-            offset_y -= SCROLL + (shift * SCROLL_EXTRA);
+            print_offset.y -= SCROLL + (shift * SCROLL_EXTRA);
             break;
         case KEY_LEFT:
-            offset_x += SCROLL + (shift * SCROLL_EXTRA);
+            print_offset.x += SCROLL + (shift * SCROLL_EXTRA);
             break;
         case KEY_RIGHT:
-            offset_x -= SCROLL + (shift * SCROLL_EXTRA);
+            print_offset.x -= SCROLL + (shift * SCROLL_EXTRA);
             break;
         case KEY_SHIFT:
             shift = TRUE;
@@ -120,8 +117,8 @@ static gboolean key_press(GtkWidget* widget, GdkEventKey* event) {
         case KEY_PLUS:
             if (zoom >= 1) {
                 zoom++;
-                offset_x -= screen_width/2;
-                offset_y -= screen_height/2;
+                print_offset.x -= screen_width/2;
+                print_offset.y -= screen_height/2;
             } else {
                 zoom *= 2;
             }
@@ -131,8 +128,8 @@ static gboolean key_press(GtkWidget* widget, GdkEventKey* event) {
         case KEY_MINUS:
             if (zoom > 1) {
                 zoom--;
-                offset_x += screen_width/2;
-                offset_y += screen_height/2;
+                print_offset.x += screen_width/2;
+                print_offset.y += screen_height/2;
             } else {
                 zoom /= 2;
             }
@@ -167,11 +164,11 @@ static gboolean key_release(GtkWidget* widget, GdkEventKey* event) {
 }
 
 /* Draw a rectangle on the screen */
-static void draw(int x, int y, int size) {
+static void draw(i_vec_t pos, int size) {
     GdkRectangle update_rect;
 
-    update_rect.x = x - size/2;
-    update_rect.y = y - size/2;
+    update_rect.x = pos.x - size/2;
+    update_rect.y = pos.y - size/2;
     update_rect.width = size;
     update_rect.height = size;
     gdk_draw_rectangle (pixmap,
@@ -184,15 +181,15 @@ static void draw(int x, int y, int size) {
                       update_rect.width, update_rect.height);
 }
 
-static void draw_circle(int x, int y, int radius) {
+static void draw_circle(i_vec_t pos, int radius) {
     int diameter = radius*2;
     if (diameter > 1) {
-        int x_corner = x - radius;
-        int y_corner = y - radius;
+        int x_corner = pos.x - radius;
+        int y_corner = pos.y - radius;
         gdk_draw_arc(pixmap, drawing_area->style->white_gc, TRUE, 
                x_corner, y_corner, diameter, diameter,0, 360*64 );
     } else {
-        draw(x, y, diameter);
+        draw(pos, diameter);
     }
 }
 
@@ -217,9 +214,9 @@ static void clear() {
                       update_rect.width, update_rect.height);
 }
 
-void apply_coordinate_zoom(int* x, int* y) {
-    *x = (*x) * zoom;
-    *y = (*y) * zoom;
+void apply_coordinate_zoom(i_vec_t* c) {
+    c->x = (c->x) * zoom;
+    c->y = (c->y) * zoom;
 }
 
 void apply_radius_zoom(int* r) {
@@ -227,45 +224,42 @@ void apply_radius_zoom(int* r) {
     if (*r < 1) *r = 1;
 }
 
-//#define APPLY_ZOOM() {x *= zoom; y *= zoom; r *= zoom;}
 void gui_print() {
     int i;
-    int x,y,r;
+    int r;
+    i_vec_t pos;
+
     bool in_bounds;
     clear();
 
     /* Sets centered object */
     if (centering) {
         object_t* c = objects[center_object];
-        x = nearbyint(c->x);
-        y = nearbyint(c->y);
+        pos = vec_ftoi(c->p);
 
-        apply_coordinate_zoom(&x, &y);
+        apply_coordinate_zoom(&pos);
 
-        offset_x = (screen_width/2)  - x;
-        offset_y = (screen_height/2) - y;
+        print_offset.x = (screen_width/2)  - pos.x;
+        print_offset.y = (screen_height/2) - pos.y;
     }
 
     for (i=0; i<n_objects; i++) {
-        x = nearbyint(objects[i]->x);
-        y = nearbyint(objects[i]->y);
+        pos = vec_ftoi(objects[i]->p);
         r = nearbyint(objects[i]->r);
 
-        apply_coordinate_zoom(&x, &y);
+        apply_coordinate_zoom(&pos);
         apply_radius_zoom(&r);
 
-        x += offset_x;
-        y += offset_y;
+        i_vec_accumulate(&pos, &print_offset);
 
-
-        in_bounds = x < screen_width  && x >= 0 && y < screen_height && y >= 0;
+        in_bounds = pos.x < screen_width  && pos.x >= 0 && pos.y < screen_height && pos.y >= 0;
         if (in_bounds) {
-            draw_circle(x,y,r);
+            draw_circle(pos, r);
         }
     }
     if (object_adding_in_progress) {
         int size = 10;
-        draw_circle(initial_click.x, initial_click.y, size*zoom);
+        draw_circle(initial_click, size*zoom);
         gdk_draw_line(pixmap,
                 drawing_area->style->white_gc,
                 initial_click.x, initial_click.y,
@@ -283,10 +277,6 @@ static gboolean time_handler(GtkWidget* widget) {
     return TRUE;
 }
 
-void start_stop() {
-    running = !running;
-}
-
 static gboolean motion_notify_event(GtkWidget* widget, GdkEventButton *event) {
     if (!object_adding_in_progress) return;
     GdkModifierType state;
@@ -297,41 +287,38 @@ static gboolean motion_notify_event(GtkWidget* widget, GdkEventButton *event) {
 #define MOUSE_RIGHT_BUTTON 3
 static gboolean button_press_event(GtkWidget* widget, GdkEventButton *event) {
     if (pixmap == NULL) return FALSE;
-    int pointer_x, pointer_y;
+    i_vec_t pointer;
     GdkModifierType state;
-    gdk_window_get_pointer(event->window, &pointer_x, &pointer_y, &state);
+    gdk_window_get_pointer(event->window, &pointer.x, &pointer.y, &state); 
 
     if (event->button == MOUSE_RIGHT_BUTTON) {
-        double vx, vy;
+        f_vec_t pos, v;
         if (centering) {
-            vx = objects[center_object]->vx;
-            vy = objects[center_object]->vy;
+            v = objects[center_object]->v;
         }
-        double x = (pointer_x - offset_x) / zoom;
-        double y = (pointer_y - offset_y) / zoom;
+        pos.x = (pointer.x - print_offset.x) / zoom;
+        pos.y = (pointer.y - print_offset.y) / zoom;
 
-        insert_new_object(x, y, 10, 10, vx, vy);
+        insert_new_object(pos, 10, 10, v);
         object_adding_in_progress = FALSE;
 
     } else if (object_adding_in_progress) {
-        double vx = ((double) (pointer_x - initial_click.x) / 64) / zoom;
-        double vy = ((double) (pointer_y - initial_click.y) / 64) / zoom;
+        f_vec_t pos, v;
+        v.x = ((double) (pointer.x - initial_click.x) / 64) / zoom;
+        v.y = ((double) (pointer.y - initial_click.y) / 64) / zoom;
 
-        double x = (initial_click.x - offset_x) / zoom;
-        double y = (initial_click.y - offset_y) / zoom;
+        pos.x = (initial_click.x - print_offset.x) / zoom;
+        pos.y = (initial_click.y - print_offset.y) / zoom;
 
         if (centering) {
-            vx += objects[center_object]->vx;
-            vy += objects[center_object]->vy;
+            f_vec_accumulate(&v, &objects[center_object]->v);
         }
 
-        insert_new_object(x, y, 10, 10, vx, vy);
+        insert_new_object(pos, 10, 10, v);
         object_adding_in_progress = FALSE;
     
     } else {
-        initial_click.x = pointer_x;
-        initial_click.y = pointer_y;
-        pointer_pos = initial_click;
+        pointer_pos = initial_click = pointer;
         object_adding_in_progress = TRUE;
     }
 

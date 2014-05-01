@@ -77,13 +77,13 @@ int add_custom_objects(void) {
 		do {
 			printf("Enter x posision: ");
 			rc = double_from_user(from_user);
-			objects[i]->x = *from_user;
+			objects[i]->p.x = *from_user;
 		} while (rc);
 
 		do {
 			printf("Enter y posision: ");
 			rc = double_from_user(from_user);
-			objects[i]->y = *from_user;
+			objects[i]->p.y = *from_user;
 		} while (rc);
 
 		do {
@@ -101,20 +101,19 @@ int add_custom_objects(void) {
 		do {
 			printf("Enter x velocity: ");
 			rc = double_from_user(from_user);
-			objects[i]->vx = *from_user;
+			objects[i]->v.x = *from_user;
 		} while (rc);
 
 		do {
 			printf("Enter y velocity: ");
 			rc = double_from_user(from_user);
-			objects[i]->vy = *from_user;
+			objects[i]->v.y = *from_user;
 		} while (rc);
 
-		objects[i]->ax = 0;
-		objects[i]->ay = 0;
+		objects[i]->a = (f_vec_t){0.0, 0.0};
 
 
-		print_object_values(objects[i]);
+		//print_object_values(objects[i]);
 
 		printf("Type Y to add more, enter to start simulation... ");
 		char c = getchar();
@@ -154,10 +153,11 @@ int add_custom_objects(void) {
 void add_default_objects(void) {
 #define DEFAULT_OBJECTS
 #ifdef DEFAULT_OBJECTS
-    insert_new_object(0,0,40000,10,0,0);
-    insert_new_object(200,200,50,1,-0.8,0.8);
-    insert_new_object(100,100,3,0.9,-1,1);
-    insert_new_object(-300,-300,3,0.9,1.1,-0.3);
+    //                      POS         MASS   RADIUS     VELOCITY
+    insert_new_object(f_vec(0,    0),   40000, 10,  f_vec(0,    0));
+    insert_new_object(f_vec(200,  200), 50,    1,   f_vec(-0.8, 0.8));
+    insert_new_object(f_vec(100,  100),  3,    0.9, f_vec(-1,   1));
+    insert_new_object(f_vec(-300, -300), 3,    0.9, f_vec(1.1,  -0.3));
 
 #endif
 }

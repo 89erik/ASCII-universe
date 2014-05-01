@@ -22,16 +22,14 @@ static void add_object(object_t* object) {
     objects[n_objects++] = object;
 }
 
-void insert_new_object(double x, double y, double m, double r, double vx, double vy) {
+void insert_new_object(f_vec_t p, double m, double r, f_vec_t v) {
     object_t* object = (object_t*) malloc(sizeof(object_t));
-    object->x = x;
-    object->y = y;
+    object->p = p;
     object->m = m;
     object->r = r;
-    object->vx = vx;
-    object->vy = vy;
-    object->ax = 0.0;
-    object->ay = 0.0;
+    object->v = v;
+    object->a.x = 0.0;
+    object->a.y = 0.0;
 
     add_object(object);
 }
@@ -42,12 +40,11 @@ void merge_objects(object_t* o1, object_t* o2) {
     double w2 = o2->m / combined_m;
 
     if (o1->m < o2->m) {
-        o1->x = o2->x;
-        o1->y = o2->y;
+        o1->p = o2->p;
     }
 
-    o1->vx = w1 * o1->vx + w2 * o2->vx;
-    o1->vy = w1 * o1->vy + w2 * o2->vy;
+    o1->v.x = w1 * o1->v.x + w2 * o2->v.x;
+    o1->v.y = w1 * o1->v.y + w2 * o2->v.y;
     
 
     o1->m = combined_m;

@@ -1,5 +1,6 @@
 #include "gravity.h"
 #include "user_input.h"	
+#include "vector.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,8 +10,7 @@
 bool centering = false;
 int center_object = 0;
 
-int offset_x = 0;
-int offset_y = 0;
+i_vec_t print_offset = {0,0};
 
 /* 
  * Collects arguments from the user and starts simulation
@@ -70,11 +70,11 @@ int init_simulation(int argc, char *argv[]) {
 		if (!strcmp(argv[i], "-do")) {
 			if (i < argc-2) {
 				if (argv[i+1][0] != '-' && argv[i+2][0] != '-') {
-					offset_x = atoi(argv[++i]);
-					offset_y = atoi(argv[++i]);
+					print_offset.x = atoi(argv[++i]);
+					print_offset.y = atoi(argv[++i]);
 				}
 			}
-			printf("Draws screen with offset (%d,%d)\n", offset_x, offset_y);
+			printf("Draws screen with offset (%d,%d)\n", print_offset.x, print_offset.y);
 			i++;
 			continue;
 		}
@@ -109,6 +109,7 @@ int init_simulation(int argc, char *argv[]) {
     return 0;
 }
 
+#ifdef DERP
 /*
  * Prints the values of a given object
  */
@@ -122,4 +123,5 @@ void print_object_values(object_t* o) {
 	printf("x acceleration: %f\n", o->ax);
 	printf("y acceleration: %f\n", o->ay);
 }
+#endif
 
