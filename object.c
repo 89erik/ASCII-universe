@@ -3,9 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <stdbool.h>
 
 int n_objects;
 object_t** objects;
+extern int center_object;
 
 #define OBJECTS_INITIAL_SIZE 32
 
@@ -53,6 +55,9 @@ void merge_objects(object_t* o1, object_t* o2) {
 
 void remove_object(int i) {
     free(objects[i]);
+    if (center_object > i) {
+        center_object--;
+    }
     for (n_objects--; i<n_objects; i++) {
         objects[i] = objects[i+1];
     }
