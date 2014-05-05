@@ -6,7 +6,6 @@
 typedef struct object {
     f_vec_t p; /* Position */
     f_vec_t v; /* Velocity */
-    f_vec_t a; /* Acceleration */
 	double 	m;	/* Mass */
 	double 	r; 	/* Radius */
 } object_t;

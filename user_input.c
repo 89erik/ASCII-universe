@@ -110,9 +110,6 @@ int add_custom_objects(void) {
 			objects[i]->v.y = *from_user;
 		} while (rc);
 
-		objects[i]->a = (f_vec_t){0.0, 0.0};
-
-
 		//print_object_values(objects[i]);
 
 		printf("Type Y to add more, enter to start simulation... ");

@@ -2,6 +2,7 @@
 #define PHYSICS_H
 
 #include "object.h"
+#include "vector.h"
 
 #include <stdbool.h>
 
@@ -15,7 +16,7 @@
 
 double distance(object_t* o1, object_t* o2);
 bool intersects(object_t* o1, object_t* o2);
-void apply_grav_force(object_t* o1, object_t* o2);
+void apply_grav_force(object_t* o1, object_t* o2, f_vec_t* acceleration);
 void tick(void);
 
 

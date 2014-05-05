@@ -54,7 +54,7 @@ bool merge(object_t* o1, object_t* o2) {
  * two objects and updates the first object's 
  * acceleration accordingly.
  */ 
-void apply_grav_force(object_t* o1, object_t* o2) {
+void apply_grav_force(object_t* o1, object_t* o2, f_vec_t* acceleration) {
     if (o1->m == 0 || o2->m == 0) return;
 
     double dist = distance(o1,o2);
@@ -84,7 +84,7 @@ void apply_grav_force(object_t* o1, object_t* o2) {
         a_vec.x = -a_vec.x;
     }
 
-    f_vec_accumulate(&o1->a, &a_vec);
+    f_vec_accumulate(acceleration, &a_vec);
 }
 
 /*
@@ -92,10 +92,10 @@ void apply_grav_force(object_t* o1, object_t* o2) {
  */
 void tick(void) {
     int i,j;
+    f_vec_t acceleration;
     for (i=0; i<n_objects; i++) {
         /* Determines gravity acceleration*/
-        objects[i]->a.x = 0;
-        objects[i]->a.y = 0;
+        acceleration.x = acceleration.y = 0.0;
         for (j=0; j<n_objects; j++) {
             if (objects[i] == objects[j]) continue;
             if (intersects(objects[i], objects[j])) {
@@ -107,17 +107,13 @@ void tick(void) {
                     continue;
                 }
             }
-            apply_grav_force(objects[i], objects[j]);
+            apply_grav_force(objects[i], objects[j], &acceleration);
         }
         /* Applies acceleration to speed */
-        f_vec_accumulate(&objects[i]->v, &objects[i]->a);
-        //objects[i]->vx += objects[i]->ax;
-        //objects[i]->vy += objects[i]->ay;
+        f_vec_accumulate(&objects[i]->v, &acceleration);
 
         /* Moves */
         f_vec_accumulate(&objects[i]->p, &objects[i]->v);
-        //objects[i]->x += objects[i]->vx;
-        //objects[i]->y += objects[i]->vy;
 
     }
 }

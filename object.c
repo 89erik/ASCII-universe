@@ -30,8 +30,6 @@ void insert_new_object(f_vec_t p, double m, double r, f_vec_t v) {
     object->m = m;
     object->r = r;
     object->v = v;
-    object->a.x = 0.0;
-    object->a.y = 0.0;
 
     add_object(object);
 }
