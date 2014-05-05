@@ -15,6 +15,7 @@ static int screen_height = 800;
 static int print_delay = 5;
 
 static gboolean running = true;
+static gboolean trail = false;
 
 extern bool centering;
 extern int center_object;
@@ -96,6 +97,9 @@ static gboolean key_press(GtkWidget* widget, GdkEventKey* event) {
         case 'c':
             centering = !centering;
             break;
+        case 't':
+            trail = !trail;
+            break;
         case '0':
         case '1':
         case '2':
@@ -163,24 +167,6 @@ static gboolean key_release(GtkWidget* widget, GdkEventKey* event) {
     return TRUE;
 }
 
-/* Draw a rectangle on the screen */
-static void draw(i_vec_t pos, int size) {
-    GdkRectangle update_rect;
-
-    update_rect.x = pos.x - size/2;
-    update_rect.y = pos.y - size/2;
-    update_rect.width = size;
-    update_rect.height = size;
-    gdk_draw_rectangle (pixmap,
-              drawing_area->style->white_gc,
-              TRUE,
-              update_rect.x, update_rect.y,
-              update_rect.width, update_rect.height);
-    gtk_widget_queue_draw_area (drawing_area, 
-                      update_rect.x, update_rect.y,
-                      update_rect.width, update_rect.height);
-}
-
 static void draw_circle(i_vec_t pos, int radius) {
     int diameter = radius*2;
     if (diameter > 1) {
@@ -189,29 +175,9 @@ static void draw_circle(i_vec_t pos, int radius) {
         gdk_draw_arc(pixmap, drawing_area->style->white_gc, TRUE, 
                x_corner, y_corner, diameter, diameter,0, 360*64 );
     } else {
-        draw(pos, diameter);
+        gdk_draw_rectangle(pixmap, drawing_area->style->white_gc, TRUE,
+                pos.x, pos.y, 1, 1);
     }
-}
-
-static void clear() {
-    int x = 0;
-    int y = 0;
-    int size = screen_width > screen_height? screen_width : screen_height;
-
-    GdkRectangle update_rect;
-
-    update_rect.x = x;
-    update_rect.y = y;
-    update_rect.width = size;
-    update_rect.height = size;
-    gdk_draw_rectangle (pixmap,
-              drawing_area->style->black_gc,
-              TRUE,
-              update_rect.x, update_rect.y,
-              update_rect.width, update_rect.height);
-    gtk_widget_queue_draw_area (drawing_area, 
-                      update_rect.x, update_rect.y,
-                      update_rect.width, update_rect.height);
 }
 
 void apply_coordinate_zoom(i_vec_t* c) {
@@ -230,7 +196,9 @@ void gui_print() {
     i_vec_t pos;
 
     bool in_bounds;
-    clear();
+    if (!trail) {
+        gdk_draw_rectangle(pixmap, drawing_area->style->black_gc, TRUE, 0, 0, screen_width, screen_height);
+    }
 
     /* Sets centered object */
     if (centering) {
@@ -265,6 +233,9 @@ void gui_print() {
                 initial_click.x, initial_click.y,
                 pointer_pos.x, pointer_pos.y);
     }
+
+    /* Updates screen */
+    gtk_widget_queue_draw_area(drawing_area, 0, 0, screen_width, screen_height);
 }
 
 void quit() {
