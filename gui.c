@@ -29,6 +29,29 @@ gboolean object_adding_in_progress = FALSE;
 i_vec_t initial_click;
 i_vec_t pointer_pos;
 
+static i_vec_t* trail_dots;
+static int n_trail_dots = 0;
+static int trail_dots_size = 0;
+
+#define TRAIL_DOTS_INITIAL_SIZE 512
+
+static void insert_trail_dot(i_vec_t trail_dot) {
+    if (!(n_trail_dots+1 < trail_dots_size)) {
+        if (trail_dots_size == 0) trail_dots_size = TRAIL_DOTS_INITIAL_SIZE;
+        else                      trail_dots_size *= 2;
+        
+        trail_dots = (i_vec_t*) realloc(trail_dots, sizeof(trail_dots) * trail_dots_size);
+    }
+    trail_dots[n_trail_dots++] = trail_dot;
+}
+
+static void clear_trail_dots() {
+    n_trail_dots = 0;
+    trail_dots_size = 0;
+    free(trail_dots);
+    trail_dots = NULL;
+}
+
 static gboolean configure_event(GtkWidget* widget, GdkEventConfigure* event) {
     if (pixmap) {
         g_object_unref (pixmap);
@@ -98,8 +121,11 @@ static gboolean key_press(GtkWidget* widget, GdkEventKey* event) {
             centering = !centering;
             break;
         case 't':
+        {
+            if (trail) clear_trail_dots();
             trail = !trail;
             break;
+        }
         case '0':
         case '1':
         case '2':
@@ -190,15 +216,17 @@ void apply_radius_zoom(int* r) {
     if (*r < 1) *r = 1;
 }
 
+gboolean in_bounds(i_vec_t pos) {
+    return pos.x < screen_width  && pos.x >= 0 && pos.y < screen_height && pos.y >= 0;
+}
+
 void gui_print() {
     int i;
     int r;
     i_vec_t pos;
 
-    bool in_bounds;
-    if (!trail) {
-        gdk_draw_rectangle(pixmap, drawing_area->style->black_gc, TRUE, 0, 0, screen_width, screen_height);
-    }
+    gdk_draw_rectangle(pixmap, drawing_area->style->black_gc, TRUE, 0, 0, screen_width, screen_height);
+    
 
     /* Sets centered object */
     if (centering) {
@@ -210,9 +238,24 @@ void gui_print() {
         print_offset.x = (screen_width/2)  - pos.x;
         print_offset.y = (screen_height/2) - pos.y;
     }
+    
+    if (trail) {
+        for (i=0; i<n_trail_dots; i++) {
+            pos = trail_dots[i];
+            apply_coordinate_zoom(&pos);
+            i_vec_accumulate(&pos, &print_offset);
+            if (in_bounds(pos)) {
+                gdk_draw_rectangle(pixmap, drawing_area->style->white_gc, TRUE, pos.x, pos.y, 1, 1);
+            }
+        }
+    }
 
     for (i=0; i<n_objects; i++) {
         pos = vec_ftoi(objects[i]->p);
+        if (trail) {
+            insert_trail_dot(pos);
+        }
+
         r = nearbyint(objects[i]->r);
 
         apply_coordinate_zoom(&pos);
@@ -220,8 +263,7 @@ void gui_print() {
 
         i_vec_accumulate(&pos, &print_offset);
 
-        in_bounds = pos.x < screen_width  && pos.x >= 0 && pos.y < screen_height && pos.y >= 0;
-        if (in_bounds) {
+        if (in_bounds(pos)) {
             draw_circle(pos, r);
         }
     }
