@@ -1,5 +1,4 @@
 #include "physics.h"
-#include "gravity.h"
 #include "object.h"
 
 #include <stdio.h>

@@ -1,39 +1,43 @@
-#include "gravity.h"
 #include "physics.h"
 #include "object.h"
+#include "user_input.h"
 
 #include <stdlib.h>
 #include <math.h>
 #include <gtk/gtk.h>
 
+/* GTK widgets */
 static GdkPixmap* pixmap = NULL;
 static GtkWidget* drawing_area;
 static GtkWidget* window;
 
+/* Screen dimensions */
 static int screen_width = 1200;
 static int screen_height = 800;
-static int print_delay = 5;
 
-static gboolean running = true;
+/* Screen printing */
+static int      print_delay = 5;
+       bool     centering = false;
+       int      center_object = 0;
+static i_vec_t  print_offset = {0,0};
+static double   zoom = 1.0;
+
+/* Screen trail */
 static gboolean trail = false;
+static i_vec_t* trail_dots;
+static int      n_trail_dots = 0;
+static int      trail_dots_size = 0;
+#define TRAIL_DOTS_INITIAL_SIZE 512
 
-extern bool centering;
-extern int center_object;
-extern i_vec_t print_offset;
+/* Screen object insertion */
+static gboolean object_adding_in_progress = false;
+static i_vec_t initial_click;
+static i_vec_t pointer_pos;
+
+/* Simulation state */
+static gboolean running = true;
 extern int n_objects;
 extern object_t** objects;
-
-double zoom = 1.0;
-
-gboolean object_adding_in_progress = FALSE;
-i_vec_t initial_click;
-i_vec_t pointer_pos;
-
-static i_vec_t* trail_dots;
-static int n_trail_dots = 0;
-static int trail_dots_size = 0;
-
-#define TRAIL_DOTS_INITIAL_SIZE 512
 
 static void insert_trail_dot(i_vec_t trail_dot) {
     if (!(n_trail_dots+1 < trail_dots_size)) {
@@ -97,7 +101,7 @@ static gboolean expose_event(GtkWidget* widget, GdkEventExpose* event) {
 #define KEY_BACKSPACE 65288
 #define SCROLL    10
 #define SCROLL_EXTRA 10
-gboolean shift = FALSE;
+static gboolean shift = FALSE;
 
 static gboolean key_press(GtkWidget* widget, GdkEventKey* event) {
     uint key = event->keyval;
@@ -385,7 +389,7 @@ int main(int argc, char *argv[]) {
 
     gtk_widget_show(window);
 
-    init_simulation(argc, argv);
+    add_default_objects();
 
     g_timeout_add(print_delay, (GSourceFunc) time_handler, (gpointer) window);
 

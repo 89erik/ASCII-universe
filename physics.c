@@ -1,4 +1,3 @@
-#include "gravity.h"
 #include "physics.h"
 #include "object.h"
 #include "vector.h"
