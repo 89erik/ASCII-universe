@@ -59,12 +59,5 @@ void remove_object(int i) {
     for (n_objects--; i<n_objects; i++) {
         objects[i] = objects[i+1];
     }
-
-    printf("objects:\n");
-    for (i=0; i<n_objects; i++) {
-        printf("#%d, r = %f,\tm = %f\n", i, objects[i]->r, objects[i]->m);
-    }
-
 }
-
 
