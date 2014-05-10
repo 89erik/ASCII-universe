@@ -39,8 +39,8 @@ static void insert_trail_dot(i_vec_t trail_dot) {
     if (!(n_trail_dots+1 < trail_dots_size)) {
         if (trail_dots_size == 0) trail_dots_size = TRAIL_DOTS_INITIAL_SIZE;
         else                      trail_dots_size *= 2;
-        
-        trail_dots = (i_vec_t*) realloc(trail_dots, sizeof(trail_dots) * trail_dots_size);
+
+        trail_dots = (i_vec_t*) realloc(trail_dots, sizeof(i_vec_t) * trail_dots_size);
     }
     trail_dots[n_trail_dots++] = trail_dot;
 }
