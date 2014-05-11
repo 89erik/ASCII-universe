@@ -11,6 +11,11 @@ static GdkPixmap* pixmap = NULL;
 static GtkWidget* drawing_area;
 static GtkWidget* window;
 
+static GtkWidget* mass_entry;
+static GtkWidget* radius_entry;
+
+static gboolean   entry_focus;
+
 /* Screen dimensions */
 static int screen_width = 1200;
 static int screen_height = 800;
@@ -38,6 +43,9 @@ static i_vec_t pointer_pos;
 static gboolean running = true;
 extern int n_objects;
 extern object_t** objects;
+
+/* Function prototypes */
+double f_from_entry(GtkWidget* entry);
 
 static void insert_trail_dot(i_vec_t trail_dot) {
     if (!(n_trail_dots+1 < trail_dots_size)) {
@@ -104,19 +112,25 @@ static gboolean expose_event(GtkWidget* widget, GdkEventExpose* event) {
 static gboolean shift = FALSE;
 
 static gboolean key_press(GtkWidget* widget, GdkEventKey* event) {
+    if (entry_focus) return false;
+
     uint key = event->keyval;
     switch (key) {
         case KEY_UP:
             print_offset.y += SCROLL + (shift * SCROLL_EXTRA);
+            centering = false;
             break;
         case KEY_DOWN:
             print_offset.y -= SCROLL + (shift * SCROLL_EXTRA);
+            centering = false;
             break;
         case KEY_LEFT:
             print_offset.x += SCROLL + (shift * SCROLL_EXTRA);
+            centering = false;
             break;
         case KEY_RIGHT:
             print_offset.x -= SCROLL + (shift * SCROLL_EXTRA);
+            centering = false;
             break;
         case KEY_SHIFT:
             shift = TRUE;
@@ -184,7 +198,7 @@ static gboolean key_press(GtkWidget* widget, GdkEventKey* event) {
             break;
     }
 
-    return TRUE;
+    return true;
 }
 
 static gboolean key_release(GtkWidget* widget, GdkEventKey* event) {
@@ -194,7 +208,7 @@ static gboolean key_release(GtkWidget* widget, GdkEventKey* event) {
             shift = FALSE;
             break;
     }
-    return TRUE;
+    return !entry_focus;
 }
 
 static void draw_circle(i_vec_t pos, int radius) {
@@ -272,7 +286,7 @@ void gui_print() {
         }
     }
     if (object_adding_in_progress) {
-        int size = 10;
+        double size = f_from_entry(radius_entry);
         draw_circle(initial_click, size*zoom);
         gdk_draw_line(pixmap,
                 drawing_area->style->white_gc,
@@ -300,6 +314,28 @@ static gboolean motion_notify_event(GtkWidget* widget, GdkEventButton *event) {
     gdk_window_get_pointer (event->window, &pointer_pos.x, &pointer_pos.y, &state);
 }
 
+static gboolean text_entry_focus_in_event(GtkWidget* widget, GdkEventFocus* event) {
+    //printf("focus in\n");
+    entry_focus = true;
+
+    return FALSE;
+}
+
+static gboolean text_entry_focus_out_event(GtkWidget* widget, GdkEventFocus* event) {
+    g_signal_connect(window, "key_press_event", G_CALLBACK(key_press), NULL);
+    g_signal_connect(window, "key_release_event", G_CALLBACK(key_release), NULL);
+    //printf("focus out\n");
+
+    entry_focus = false;
+
+    return FALSE;
+}
+
+double f_from_entry(GtkWidget* entry) {
+    return atof(gtk_entry_get_text(GTK_ENTRY(entry)));
+}
+
+
 #define MOUSE_LEFT_BUTTON  1
 #define MOUSE_RIGHT_BUTTON 3
 static gboolean button_press_event(GtkWidget* widget, GdkEventButton *event) {
@@ -316,7 +352,7 @@ static gboolean button_press_event(GtkWidget* widget, GdkEventButton *event) {
         pos.x = (pointer.x - print_offset.x) / zoom;
         pos.y = (pointer.y - print_offset.y) / zoom;
 
-        insert_new_object(pos, 10, 10, v);
+        insert_new_object(pos, f_from_entry(mass_entry), f_from_entry(radius_entry), v);
         object_adding_in_progress = FALSE;
 
     } else if (object_adding_in_progress) {
@@ -331,7 +367,7 @@ static gboolean button_press_event(GtkWidget* widget, GdkEventButton *event) {
             f_vec_accumulate(&v, &objects[center_object]->v);
         }
 
-        insert_new_object(pos, 10, 10, v);
+        insert_new_object(pos, f_from_entry(mass_entry), f_from_entry(radius_entry), v);
         object_adding_in_progress = FALSE;
     
     } else {
@@ -342,18 +378,67 @@ static gboolean button_press_event(GtkWidget* widget, GdkEventButton *event) {
     return TRUE;
 }
 
+GtkWidget* init_insertion_box() {
+    GtkWidget* insertion_box;
+    GtkWidget* mass_label;
+    GtkWidget* radius_label; 
+
+    /* Init box */
+    insertion_box = gtk_vbox_new(FALSE, 0);
+
+    /* Mass entry */
+    mass_label = gtk_label_new("Mass: ");
+    mass_entry = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(mass_entry), "1.0");
+    gtk_entry_set_visibility(GTK_ENTRY(mass_entry), true);
+    gtk_editable_select_region(GTK_EDITABLE(mass_entry), 0, GTK_ENTRY(mass_entry)->text_length);
+    gtk_editable_set_editable(GTK_EDITABLE(mass_entry), true);
+    gtk_box_pack_start(GTK_BOX(insertion_box), mass_label, true, true, 0);
+    gtk_box_pack_start(GTK_BOX(insertion_box), mass_entry, true, true, 0);
+    gtk_widget_show(mass_label);
+    gtk_widget_show(mass_entry);
+
+    /* Radius entry */
+    radius_label = gtk_label_new("Radius: ");
+    radius_entry = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(radius_entry), "1.0");
+    gtk_entry_set_visibility(GTK_ENTRY(radius_entry), true);
+    gtk_editable_select_region(GTK_EDITABLE(radius_entry), 0, GTK_ENTRY(radius_entry)->text_length);
+    gtk_editable_set_editable(GTK_EDITABLE(radius_entry), true);
+    gtk_box_pack_start(GTK_BOX(insertion_box), radius_label, true, true, 0);
+    gtk_box_pack_start(GTK_BOX(insertion_box), radius_entry, true, true, 0);
+    gtk_widget_show(radius_label);
+    gtk_widget_show(radius_entry);
+    
+    
+    /* Widget focus */
+    g_signal_connect_swapped(radius_entry, "focus_in_event", G_CALLBACK(text_entry_focus_in_event), window);
+    g_signal_connect_swapped(mass_entry, "focus_in_event", G_CALLBACK(text_entry_focus_in_event), window);
+    g_signal_connect_swapped(radius_entry, "focus_out_event", G_CALLBACK(text_entry_focus_out_event), window);
+    g_signal_connect_swapped(mass_entry, "focus_out_event", G_CALLBACK(text_entry_focus_out_event), window);
+
+    
+    /* Foucs out button */
+    GtkWidget* focus_button;
+    focus_button = gtk_button_new_with_label("activate hotkeys");
+    gtk_box_pack_start(GTK_BOX (insertion_box), focus_button, FALSE, FALSE, 0);
+    g_signal_connect_swapped(focus_button, "clicked", G_CALLBACK (text_entry_focus_out_event), window);
+    gtk_widget_show(focus_button);
+
+    return insertion_box;
+}
+
 int main(int argc, char *argv[]) {
-    GtkWidget* vbox;
-    GtkWidget* stop_button;
+    GtkWidget* toplevel_box;
 
     gtk_init (&argc, &argv);
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_widget_set_name(window, "Test Input");
 
-    vbox = gtk_vbox_new(FALSE, 0);
-    gtk_container_add(GTK_CONTAINER (window), vbox);
-    gtk_widget_show(vbox);
+    toplevel_box = gtk_hbox_new(FALSE, 0);
+    gtk_container_add(GTK_CONTAINER (window), toplevel_box);
+    gtk_widget_show(toplevel_box);
 
     /* Close window action */
     g_signal_connect(window, "destroy", G_CALLBACK (quit), NULL); 
@@ -361,7 +446,7 @@ int main(int argc, char *argv[]) {
     /* Create the drawing area */
     drawing_area = gtk_drawing_area_new ();
     gtk_widget_set_size_request(GTK_WIDGET (drawing_area), screen_width, screen_height);
-    gtk_box_pack_start(GTK_BOX (vbox), drawing_area, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX (toplevel_box), drawing_area, TRUE, TRUE, 0);
     gtk_widget_show(drawing_area);
 
     /* Signals used to handle backing pixmap */
@@ -381,11 +466,11 @@ int main(int argc, char *argv[]) {
     g_signal_connect(window, "key_press_event", G_CALLBACK(key_press), NULL);
     g_signal_connect(window, "key_release_event", G_CALLBACK(key_release), NULL);
 
-    /* Stop button */
-    stop_button = gtk_button_new_with_label("start/stop");
-    gtk_box_pack_start(GTK_BOX (vbox), stop_button, FALSE, FALSE, 0);
-    g_signal_connect_swapped(stop_button, "clicked", G_CALLBACK (start_stop), window);
-    gtk_widget_show(stop_button);
+
+
+    GtkWidget* insertion_box = init_insertion_box();
+    gtk_container_add(GTK_CONTAINER(toplevel_box), insertion_box);
+    gtk_widget_show(insertion_box);
 
     gtk_widget_show(window);
 

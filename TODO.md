@@ -6,7 +6,6 @@
 * Update README
 * Configuration file
 * Clean up directory structure
-* Ability to set mass, radius, etc of new objects in GUI
 * Overview of all objects in GUI
     * Ability to edit existing objects
 * Ability to change window size
