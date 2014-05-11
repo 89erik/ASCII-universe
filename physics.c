@@ -95,7 +95,7 @@ void tick(void) {
     f_vec_t acceleration;
     for (i=0; i<n_objects; i++) {
         /* Determines gravity acceleration*/
-        acceleration.x = acceleration.y = 0.0;
+        acceleration = (f_vec_t) {0.0, 0.0};
         for (j=0; j<n_objects; j++) {
             if (objects[i] == objects[j]) continue;
             if (intersects(objects[i], objects[j])) {
