@@ -4,6 +4,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdbool.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 int n_objects;
 object_t** objects;
@@ -59,5 +63,43 @@ void remove_object(int i) {
     for (n_objects--; i<n_objects; i++) {
         objects[i] = objects[i+1];
     }
+}
+
+void save_state(const char* path) {
+    int i, fd;
+    fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU);
+    for (i=0; i<n_objects; i++) {
+        write(fd, objects[i], sizeof(object_t));
+    }
+    close(fd);
+}
+
+void load_state(const char* path) {
+    int fd;
+    size_t count;
+    object_t* object;
+
+    n_objects = 0;
+    fd = open(path, O_RDONLY);
+
+    while (true) {
+        object = malloc(sizeof(object_t));
+        count = read(fd, object, sizeof(object_t));
+        if (count == sizeof(object_t)) {
+            add_object(object);
+
+        } else if (count == 0) {
+            break;
+
+        } else {
+            fprintf(stderr, "Error: Tried to load from non-aligned file!\n");
+            fprintf(stderr, "%dth object consisted of %ld (out of %ld) bytes.\n", n_objects, count, sizeof(object_t));
+            fprintf(stderr, "Are you sure you loaded the right file?\n");
+            fprintf(stderr, "Path: %s\n", path);
+            break;
+        }
+    }
+    free(object); // Last read is allways empty
+    object = NULL;
 }
 

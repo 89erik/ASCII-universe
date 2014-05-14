@@ -4,3 +4,4 @@ test.c
 *.o
 universe
 *.swp
+*.sim

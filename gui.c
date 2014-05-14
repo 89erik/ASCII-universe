@@ -13,6 +13,7 @@ static GtkWidget* window;
 
 static GtkWidget* mass_entry;
 static GtkWidget* radius_entry;
+static GtkWidget* path_entry;
 
 static gboolean   entry_focus;
 
@@ -247,7 +248,7 @@ void gui_print() {
     
 
     /* Sets centered object */
-    if (centering) {
+    if (centering && center_object < n_objects) {
         object_t* c = objects[center_object];
         pos = vec_ftoi(c->p);
 
@@ -329,6 +330,16 @@ static gboolean text_entry_focus_out_event(GtkWidget* widget, GdkEventFocus* eve
     entry_focus = false;
 
     return FALSE;
+}
+
+static gboolean load_button_event(GtkWidget* widget, GdkEventFocus* event) { //TODO GdkEventFocus her og under
+    load_state(gtk_entry_get_text(GTK_ENTRY(path_entry))); 
+    return false;
+}
+
+static gboolean save_button_event(GtkWidget* widget, GdkEventFocus* event) {
+    save_state(gtk_entry_get_text(GTK_ENTRY(path_entry))); 
+    return false;
 }
 
 double f_from_entry(GtkWidget* entry) {
@@ -418,12 +429,38 @@ GtkWidget* init_insertion_box() {
     g_signal_connect_swapped(mass_entry, "focus_out_event", G_CALLBACK(text_entry_focus_out_event), window);
 
     
-    /* Foucs out button */
+    /* Focus out button */
     GtkWidget* focus_button;
     focus_button = gtk_button_new_with_label("activate hotkeys");
     gtk_box_pack_start(GTK_BOX (insertion_box), focus_button, FALSE, FALSE, 0);
     g_signal_connect_swapped(focus_button, "clicked", G_CALLBACK (text_entry_focus_out_event), window);
     gtk_widget_show(focus_button);
+
+    /* Load/store path */
+    path_entry = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(path_entry), "simulation.sim");
+    gtk_entry_set_visibility(GTK_ENTRY(path_entry), true);
+    gtk_editable_select_region(GTK_EDITABLE(path_entry), 0, GTK_ENTRY(path_entry)->text_length);
+    gtk_editable_set_editable(GTK_EDITABLE(path_entry), true);
+    gtk_box_pack_start(GTK_BOX(insertion_box), path_entry, true, true, 0);
+    gtk_widget_show(path_entry);
+    
+    g_signal_connect_swapped(path_entry, "focus_in_event", G_CALLBACK(text_entry_focus_in_event), window);
+    g_signal_connect_swapped(path_entry, "focus_out_event", G_CALLBACK(text_entry_focus_out_event), window);
+
+    /* Load button */
+    GtkWidget* load_button;
+    load_button = gtk_button_new_with_label("load");
+    gtk_box_pack_start(GTK_BOX (insertion_box), load_button, FALSE, FALSE, 0);
+    g_signal_connect_swapped(load_button, "clicked", G_CALLBACK (load_button_event), window);
+    gtk_widget_show(load_button);
+
+    /* Save button */
+    GtkWidget* save_button;
+    save_button = gtk_button_new_with_label("save");
+    gtk_box_pack_start(GTK_BOX (insertion_box), save_button, FALSE, FALSE, 0);
+    g_signal_connect_swapped(save_button, "clicked", G_CALLBACK (save_button_event), window);
+    gtk_widget_show(save_button);
 
     return insertion_box;
 }
