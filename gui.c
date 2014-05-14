@@ -14,6 +14,10 @@ static GtkWidget* window;
 
 static GtkWidget* mass_entry;
 static GtkWidget* radius_entry;
+static GtkWidget* position_x_entry;
+static GtkWidget* position_y_entry;
+static GtkWidget* velocity_x_entry;
+static GtkWidget* velocity_y_entry;
 static GtkWidget* path_entry;
 
 static gboolean   entry_focus;
@@ -77,6 +81,18 @@ static void clear_trail_dots() {
     trail_dots_size = 0;
     free(trail_dots);
     trail_dots = NULL;
+}
+
+static void set_entry_int(GtkWidget* entry, int number) {
+    char buffer[16];
+    sprintf(buffer, "%d", number);
+    gtk_entry_set_text(GTK_ENTRY(entry), buffer);
+}
+
+static void set_entry_double(GtkWidget* entry, double number) {
+    char buffer[32];
+    sprintf(buffer, "%lf", number);
+    gtk_entry_set_text(GTK_ENTRY(entry), buffer);
 }
 
 static gboolean configure_event(GtkWidget* widget, GdkEventConfigure* event) {
@@ -248,6 +264,13 @@ gboolean in_bounds(i_vec_t pos) {
     return pos.x < screen_width  && pos.x >= 0 && pos.y < screen_height && pos.y >= 0;
 }
 
+f_vec_t calculate_start_velocity() {
+    f_vec_t v;
+    v.x = ((double) (pointer_pos.x - initial_click.x) / 64) / zoom;
+    v.y = ((double) (pointer_pos.y - initial_click.y) / 64) / zoom;
+    return v;
+}
+
 void gui_print() {
     int i;
     int r;
@@ -302,6 +325,10 @@ void gui_print() {
                 drawing_area->style->white_gc,
                 initial_click.x, initial_click.y,
                 pointer_pos.x, pointer_pos.y);
+
+        f_vec_t v = calculate_start_velocity();
+        set_entry_double(velocity_x_entry, v.x);
+        set_entry_double(velocity_y_entry, v.y);
     }
 
     /* Updates screen */
@@ -356,30 +383,30 @@ double f_from_entry(GtkWidget* entry) {
     return atof(gtk_entry_get_text(GTK_ENTRY(entry)));
 }
 
-
 #define MOUSE_LEFT_BUTTON  1
 #define MOUSE_RIGHT_BUTTON 3
 static gboolean button_press_event(GtkWidget* widget, GdkEventButton *event) {
     if (pixmap == NULL) return FALSE;
-    i_vec_t pointer;
     GdkModifierType state;
-    gdk_window_get_pointer(event->window, &pointer.x, &pointer.y, &state); 
+    gdk_window_get_pointer(event->window, &pointer_pos.x, &pointer_pos.y, &state); 
 
     if (event->button == MOUSE_RIGHT_BUTTON) {
         f_vec_t pos, v;
         if (centering) {
             v = objects[center_object]->v;
         }
-        pos.x = (pointer.x - print_offset.x) / zoom;
-        pos.y = (pointer.y - print_offset.y) / zoom;
+        pos.x = (pointer_pos.x - print_offset.x) / zoom;
+        pos.y = (pointer_pos.y - print_offset.y) / zoom;
 
         insert_new_object(pos, f_from_entry(mass_entry), f_from_entry(radius_entry), v);
         object_adding_in_progress = FALSE;
+        
+        set_entry_int(position_x_entry, pos.x);
+        set_entry_int(position_y_entry, pos.y);
 
     } else if (object_adding_in_progress) {
         f_vec_t pos, v;
-        v.x = ((double) (pointer.x - initial_click.x) / 64) / zoom;
-        v.y = ((double) (pointer.y - initial_click.y) / 64) / zoom;
+        v = calculate_start_velocity();
 
         pos.x = (initial_click.x - print_offset.x) / zoom;
         pos.y = (initial_click.y - print_offset.y) / zoom;
@@ -390,10 +417,14 @@ static gboolean button_press_event(GtkWidget* widget, GdkEventButton *event) {
 
         insert_new_object(pos, f_from_entry(mass_entry), f_from_entry(radius_entry), v);
         object_adding_in_progress = FALSE;
+        set_entry_double(velocity_x_entry, 0.0);
+        set_entry_double(velocity_y_entry, 0.0);
     
     } else {
-        pointer_pos = initial_click = pointer;
+        initial_click = pointer_pos; 
         object_adding_in_progress = TRUE;
+        set_entry_int(position_x_entry, (pointer_pos.x - print_offset.x) / zoom);
+        set_entry_int(position_y_entry, (pointer_pos.y - print_offset.y) / zoom);
     }
 
     return TRUE;
@@ -401,13 +432,12 @@ static gboolean button_press_event(GtkWidget* widget, GdkEventButton *event) {
 
 GtkWidget* init_insertion_box() {
     GtkWidget* insertion_box;
-    GtkWidget* mass_label;
-    GtkWidget* radius_label; 
 
     /* Init box */
     insertion_box = gtk_vbox_new(FALSE, 0);
 
     /* Mass entry */
+    GtkWidget* mass_label;
     mass_label = gtk_label_new("Mass: ");
     mass_entry = gtk_entry_new();
     gtk_entry_set_text(GTK_ENTRY(mass_entry), "1.0");
@@ -420,7 +450,7 @@ GtkWidget* init_insertion_box() {
     gtk_widget_show(mass_entry);
 
     /* Radius entry */
-    radius_label = gtk_label_new("Radius: ");
+    GtkWidget* radius_label = gtk_label_new("Radius: ");
     radius_entry = gtk_entry_new();
     gtk_entry_set_text(GTK_ENTRY(radius_entry), "1.0");
     gtk_entry_set_visibility(GTK_ENTRY(radius_entry), true);
@@ -431,6 +461,45 @@ GtkWidget* init_insertion_box() {
     gtk_widget_show(radius_label);
     gtk_widget_show(radius_entry);
     
+    /* Position entry */
+    GtkWidget* position_box = gtk_hbox_new(false, 0);
+    GtkWidget* position_label = gtk_label_new("Position: ");
+    position_x_entry = gtk_entry_new();
+    position_y_entry = gtk_entry_new();
+    gtk_entry_set_visibility(GTK_ENTRY(position_x_entry), true);
+    gtk_entry_set_visibility(GTK_ENTRY(position_y_entry), true);
+    gtk_editable_select_region(GTK_EDITABLE(position_x_entry), 0, GTK_ENTRY(position_x_entry)->text_length);
+    gtk_editable_select_region(GTK_EDITABLE(position_y_entry), 0, GTK_ENTRY(position_y_entry)->text_length);
+    gtk_editable_set_editable(GTK_EDITABLE(position_x_entry), true);
+    gtk_editable_set_editable(GTK_EDITABLE(position_y_entry), true);
+    gtk_box_pack_start(GTK_BOX(insertion_box), position_label, true, true, 0);
+    gtk_box_pack_start(GTK_BOX(position_box), position_x_entry, true, true, 0);
+    gtk_box_pack_start(GTK_BOX(position_box), position_y_entry, true, true, 0);
+    gtk_box_pack_start(GTK_BOX(insertion_box), position_box, true, true, 0);
+    gtk_widget_show(position_label);
+    gtk_widget_show(position_x_entry);
+    gtk_widget_show(position_y_entry);
+    gtk_widget_show(position_box);
+    
+    /* Velocity entry */
+    GtkWidget* velocity_box = gtk_hbox_new(false, 0);
+    GtkWidget* velocity_label = gtk_label_new("Velocity: ");
+    velocity_x_entry = gtk_entry_new();
+    velocity_y_entry = gtk_entry_new();
+    gtk_entry_set_visibility(GTK_ENTRY(velocity_x_entry), true);
+    gtk_entry_set_visibility(GTK_ENTRY(velocity_y_entry), true);
+    gtk_editable_select_region(GTK_EDITABLE(velocity_x_entry), 0, GTK_ENTRY(velocity_x_entry)->text_length);
+    gtk_editable_select_region(GTK_EDITABLE(velocity_y_entry), 0, GTK_ENTRY(velocity_y_entry)->text_length);
+    gtk_editable_set_editable(GTK_EDITABLE(velocity_x_entry), true);
+    gtk_editable_set_editable(GTK_EDITABLE(velocity_y_entry), true);
+    gtk_box_pack_start(GTK_BOX(insertion_box), velocity_label, true, true, 0);
+    gtk_box_pack_start(GTK_BOX(velocity_box), velocity_x_entry, true, true, 0);
+    gtk_box_pack_start(GTK_BOX(velocity_box), velocity_y_entry, true, true, 0);
+    gtk_box_pack_start(GTK_BOX(insertion_box), velocity_box, true, true, 0);
+    gtk_widget_show(velocity_label);
+    gtk_widget_show(velocity_x_entry);
+    gtk_widget_show(velocity_y_entry);
+    gtk_widget_show(velocity_box);
     
     /* Widget focus */
     g_signal_connect_swapped(radius_entry, "focus_in_event", G_CALLBACK(text_entry_focus_in_event), window);
