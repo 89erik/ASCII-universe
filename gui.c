@@ -35,6 +35,7 @@ static i_vec_t* trail_dots;
 static int      n_trail_dots = 0;
 static int      trail_dots_size = 0;
 #define TRAIL_DOTS_INITIAL_SIZE 512
+#define TRAIL_DOTS_MAX_SIZE     512*40
 
 /* Screen object insertion */
 static gboolean object_adding_in_progress = false;
@@ -50,13 +51,25 @@ extern object_t** objects;
 double f_from_entry(GtkWidget* entry);
 
 static void insert_trail_dot(i_vec_t trail_dot) {
+    static int i = 0;
     if (!(n_trail_dots+1 < trail_dots_size)) {
-        if (trail_dots_size == 0) trail_dots_size = TRAIL_DOTS_INITIAL_SIZE;
-        else                      trail_dots_size *= 2;
-
+        if (trail_dots_size == 0) {
+            i = 0;
+            trail_dots_size = TRAIL_DOTS_INITIAL_SIZE;
+        } else { 
+            trail_dots_size *= 2;
+            if (trail_dots_size > TRAIL_DOTS_MAX_SIZE) {
+                trail_dots_size = TRAIL_DOTS_MAX_SIZE;
+            }
+        }
         trail_dots = (i_vec_t*) realloc(trail_dots, sizeof(i_vec_t) * trail_dots_size);
     }
-    trail_dots[n_trail_dots++] = trail_dot;
+
+    if (n_trail_dots+1 < TRAIL_DOTS_MAX_SIZE) {
+        n_trail_dots++;
+    }
+    trail_dots[i] = trail_dot;
+    i = i+1 < TRAIL_DOTS_MAX_SIZE? i+1 : 0;
 }
 
 static void clear_trail_dots() {
@@ -215,15 +228,10 @@ static gboolean key_release(GtkWidget* widget, GdkEventKey* event) {
 
 static void draw_circle(i_vec_t pos, int radius) {
     int diameter = radius*2;
-    if (diameter > 1) {
-        int x_corner = pos.x - radius;
-        int y_corner = pos.y - radius;
-        gdk_draw_arc(pixmap, drawing_area->style->white_gc, TRUE, 
-               x_corner, y_corner, diameter, diameter,0, 360*64 );
-    } else {
-        gdk_draw_rectangle(pixmap, drawing_area->style->white_gc, TRUE,
-                pos.x, pos.y, 1, 1);
-    }
+    int x_corner = pos.x - radius;
+    int y_corner = pos.y - radius;
+    gdk_draw_arc(pixmap, drawing_area->style->white_gc, TRUE, 
+           x_corner, y_corner, diameter, diameter,0, 360*64 );
 }
 
 void apply_coordinate_zoom(i_vec_t* c) {
