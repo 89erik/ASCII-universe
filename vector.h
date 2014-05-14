@@ -14,6 +14,7 @@ typedef struct f_vec {
 double f_vec_euclidean_distance(f_vec_t v1, f_vec_t v2);
 f_vec_t f_vec_add(f_vec_t v1, f_vec_t v2);
 void f_vec_accumulate(f_vec_t* v1, f_vec_t* v2);
+void i_vec_accumulate(i_vec_t* v1, i_vec_t* v2);
 f_vec_t f_vec_diff(f_vec_t v1, f_vec_t v2);
 void f_vec_abs(f_vec_t* v);
 f_vec_t f_vec(double x, double y);

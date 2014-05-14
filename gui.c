@@ -1,6 +1,7 @@
 #include "physics.h"
 #include "object.h"
 #include "user_input.h"
+#include "vector.h"
 
 #include <stdlib.h>
 #include <math.h>
@@ -310,9 +311,10 @@ static gboolean time_handler(GtkWidget* widget) {
 }
 
 static gboolean motion_notify_event(GtkWidget* widget, GdkEventButton *event) {
-    if (!object_adding_in_progress) return;
+    if (!object_adding_in_progress) return true;
     GdkModifierType state;
     gdk_window_get_pointer (event->window, &pointer_pos.x, &pointer_pos.y, &state);
+    return true;
 }
 
 static gboolean text_entry_focus_in_event(GtkWidget* widget, GdkEventFocus* event) {

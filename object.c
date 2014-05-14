@@ -17,7 +17,6 @@ extern int center_object;
 
 static void add_object(object_t* object) {
     static int objects_size = 0;
-    object_t** tmp;
 
     if (!(n_objects+1 < objects_size)) {
         if (objects_size == 0) objects_size = OBJECTS_INITIAL_SIZE;
