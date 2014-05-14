@@ -23,10 +23,7 @@ double distance(object_t* o1, object_t* o2){
  */
 bool intersects_with_factor(object_t* o1, object_t* o2, double factor) {
     double dist = distance(o1,o2);
-    if (dist < (o1->r + o2->r) * factor) {
-        return true;
-    }
-    return false;
+    return dist < (o1->r + o2->r) * factor;
 }
 /*
  * Determines if o1 and o2 are intersecting
