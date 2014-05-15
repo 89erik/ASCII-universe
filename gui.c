@@ -339,6 +339,11 @@ void quit() {
     exit(0);
 }
 
+void size_changed(GtkWidget *widget, GtkAllocation *allocation, void *data) {
+    screen_width  = allocation->width;
+    screen_height = allocation->height;
+}
+
 static gboolean time_handler(GtkWidget* widget) {
     if (running) tick();
     gui_print();
@@ -578,6 +583,9 @@ int main(int argc, char *argv[]) {
                          | GDK_POINTER_MOTION_MASK
                          | GDK_POINTER_MOTION_HINT_MASK);
     
+    g_signal_connect(drawing_area, "size-allocate", G_CALLBACK(size_changed), NULL);
+
+
     /* Key events */
     g_signal_connect(window, "key_press_event", G_CALLBACK(key_press), NULL);
     g_signal_connect(window, "key_release_event", G_CALLBACK(key_release), NULL);

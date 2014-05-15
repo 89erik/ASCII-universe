@@ -7,7 +7,6 @@
 * Clean up directory structure
 * Overview of all objects in GUI
     * Ability to edit existing objects
-* Ability to change window size
 * Optimize physics tick
     * Remove conditionals in kernel
     * Parallelize
