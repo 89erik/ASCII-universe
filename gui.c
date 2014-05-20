@@ -1,3 +1,4 @@
+#include "guitraildot.h"
 #include "physics.h"
 #include "object.h"
 #include "user_input.h"
@@ -34,12 +35,9 @@ static i_vec_t  print_offset = {0,0};
 static double   zoom = 1.0;
 
 /* Screen trail */
-static gboolean trail = false;
-static i_vec_t* trail_dots;
-static int      n_trail_dots = 0;
-static int      trail_dots_size = 0;
-#define TRAIL_DOTS_INITIAL_SIZE 512
-#define TRAIL_DOTS_MAX_SIZE     512*40
+extern bool     trail;
+extern int      n_trail_dots;
+extern i_vec_t* trail_dots;
 
 /* Screen object insertion */
 static gboolean object_adding_in_progress = false;
@@ -54,34 +52,6 @@ extern object_t** objects;
 /* Function prototypes */
 double f_from_entry(GtkWidget* entry);
 
-static void insert_trail_dot(i_vec_t trail_dot) {
-    static int i = 0;
-    if (!(n_trail_dots+1 < trail_dots_size)) {
-        if (trail_dots_size == 0) {
-            i = 0;
-            trail_dots_size = TRAIL_DOTS_INITIAL_SIZE;
-        } else { 
-            trail_dots_size *= 2;
-            if (trail_dots_size > TRAIL_DOTS_MAX_SIZE) {
-                trail_dots_size = TRAIL_DOTS_MAX_SIZE;
-            }
-        }
-        trail_dots = (i_vec_t*) realloc(trail_dots, sizeof(i_vec_t) * trail_dots_size);
-    }
-
-    if (n_trail_dots+1 < TRAIL_DOTS_MAX_SIZE) {
-        n_trail_dots++;
-    }
-    trail_dots[i] = trail_dot;
-    i = i+1 < TRAIL_DOTS_MAX_SIZE? i+1 : 0;
-}
-
-static void clear_trail_dots() {
-    n_trail_dots = 0;
-    trail_dots_size = 0;
-    free(trail_dots);
-    trail_dots = NULL;
-}
 
 static void set_entry_int(GtkWidget* entry, int number) {
     char buffer[16];
