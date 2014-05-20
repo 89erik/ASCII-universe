@@ -99,17 +99,17 @@ static gboolean expose_event(GtkWidget* widget, GdkEventExpose* event) {
     return FALSE;
 }
 
-#define KEY_UP    65362
-#define KEY_LEFT  65361
-#define KEY_DOWN  65364
-#define KEY_RIGHT 65363
-#define KEY_SHIFT 65505
-#define KEY_PLUS  65451
-#define KEY_MINUS 65453
-#define KEY_ESCAPE 65307
+#define KEY_UP        65362
+#define KEY_LEFT      65361
+#define KEY_DOWN      65364
+#define KEY_RIGHT     65363
+#define KEY_SHIFT     65505
+#define KEY_PLUS      65451
+#define KEY_MINUS     65453
+#define KEY_ESCAPE    65307
 #define KEY_BACKSPACE 65288
-#define SCROLL    10
-#define SCROLL_EXTRA 10
+#define SCROLL        10
+#define SCROLL_EXTRA  20
 static gboolean shift = FALSE;
 
 static gboolean key_press(GtkWidget* widget, GdkEventKey* event) {
